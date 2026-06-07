@@ -76,7 +76,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             />
           </div>
           <Command.List className="max-h-[300px] overflow-y-auto p-2">
-            {loading && <Command.Loading>Searching...</Command.Loading>}
+            {loading && (
+              <div className="py-6 text-center text-sm text-muted-foreground">Searching...</div>
+            )}
             {!loading && query.length >= 2 && results.length === 0 && (
               <Command.Empty>No results found.</Command.Empty>
             )}

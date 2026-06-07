@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
     reset,
     formState: { errors },
   } = useForm<VMInput>({
-    resolver: zodResolver(vmSchema),
+    resolver: zodResolver(vmSchema) as Resolver<VMInput>,
     defaultValues: {
       cpuCores: 2,
       memoryGB: 8,

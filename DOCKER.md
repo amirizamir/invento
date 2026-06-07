@@ -151,6 +151,20 @@ make shell     # exec into app container
 
 ## Troubleshooting
 
+**Build fails at `npm run build`**
+
+Pull latest changes (includes `eslint.ignoreDuringBuilds` and TypeScript fixes), then:
+
+```bash
+docker compose --env-file .env.docker build --no-cache app
+```
+
+To see the full error locally in the container:
+
+```bash
+docker compose --env-file .env.docker build app 2>&1 | tail -100
+```
+
 **Prisma binary download fails during build**
 
 The build skips `postinstall` and runs `prisma generate` in a dedicated stage with retries. If it still fails, check outbound HTTPS to `binaries.prisma.sh`:

@@ -2,7 +2,6 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { Pencil, ArrowLeft } from "lucide-react";
@@ -29,7 +28,6 @@ import { useState } from "react";
 
 export default function VMDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);

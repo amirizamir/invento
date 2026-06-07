@@ -4,6 +4,13 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
+  eslint: {
+    // Lint runs in the dedicated Docker `lint` service — don't block production builds
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   async headers() {
     return [
       {

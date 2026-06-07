@@ -37,6 +37,8 @@ COPY . .
 RUN mkdir -p public
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="postgresql://postgres:postgres@postgres:5432/vm_inventory?schema=public"
+ENV NEXTAUTH_URL="http://localhost:3000"
+ENV NEXTAUTH_SECRET="docker-build-secret-minimum-32-characters"
 RUN npm run build
 
 # -----------------------------------------------------------------------------
