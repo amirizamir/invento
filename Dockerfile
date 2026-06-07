@@ -1,49 +1,56 @@
 # =============================================================================
 # VM Inventory Manager — Multi-stage Dockerfile
-#
-# Targets:
-#   production  — Next.js standalone app (default)
-#   migrator    — DB schema push + seed (one-shot init)
-#   development — Hot reload dev server
-#   test        — Jest unit/component tests
-#   studio      — Prisma Studio UI
-#   lint        — ESLint
+# Base: Debian slim (reliable Prisma engine downloads vs Alpine/musl)
 # =============================================================================
 
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat openssl
+FROM node:20-bookworm-slim AS base
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # -----------------------------------------------------------------------------
-# Dependencies
+# npm dependencies (NO postinstall — schema not present yet)
 # -----------------------------------------------------------------------------
 FROM base AS deps
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 COPY package.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install --ignore-scripts --legacy-peer-deps
+
+# -----------------------------------------------------------------------------
+# Prisma client generation (schema + retry for network flakiness)
+# -----------------------------------------------------------------------------
+FROM base AS prisma
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./
+COPY prisma ./prisma
+COPY scripts/prisma-generate.sh ./scripts/
+RUN chmod +x ./scripts/prisma-generate.sh \
+  && sh ./scripts/prisma-generate.sh
 
 # -----------------------------------------------------------------------------
 # Build Next.js standalone production bundle
 # -----------------------------------------------------------------------------
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=prisma /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="postgresql://postgres:postgres@postgres:5432/vm_inventory?schema=public"
-RUN npx prisma generate
 RUN npm run build
 
 # -----------------------------------------------------------------------------
 # Database migrator + seeder (one-shot init container)
 # -----------------------------------------------------------------------------
 FROM base AS migrator
-RUN apk add --no-cache postgresql-client
-COPY --from=deps /app/node_modules ./node_modules
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends postgresql-client \
+  && rm -rf /var/lib/apt/lists/*
+COPY --from=prisma /app/node_modules ./node_modules
 COPY package.json ./
 COPY prisma ./prisma
 COPY scripts/wait-for-postgres.sh scripts/migrate.sh ./scripts/
-RUN chmod +x ./scripts/wait-for-postgres.sh ./scripts/migrate.sh \
-  && npx prisma generate
+RUN chmod +x ./scripts/wait-for-postgres.sh ./scripts/migrate.sh
 CMD ["sh", "./scripts/migrate.sh"]
 
 # -----------------------------------------------------------------------------
@@ -53,16 +60,17 @@ FROM base AS production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 nextjs
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends wget \
+  && rm -rf /var/lib/apt/lists/* \
+  && groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
 COPY scripts/docker-entrypoint.sh ./scripts/
-RUN chmod +x ./scripts/docker-entrypoint.sh \
-  && apk add --no-cache wget
+RUN chmod +x ./scripts/docker-entrypoint.sh
 
 USER nextjs
 EXPOSE 3000
@@ -78,11 +86,12 @@ ENTRYPOINT ["sh", "./scripts/docker-entrypoint.sh"]
 # Development (hot reload)
 # -----------------------------------------------------------------------------
 FROM base AS development
-RUN apk add --no-cache postgresql-client
-COPY --from=deps /app/node_modules ./node_modules
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends postgresql-client \
+  && rm -rf /var/lib/apt/lists/*
+COPY --from=prisma /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public \
-  && npx prisma generate \
   && chmod +x ./scripts/wait-for-postgres.sh ./scripts/migrate.sh
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -93,9 +102,8 @@ CMD ["sh", "-c", "sh ./scripts/migrate.sh && npm run dev -- -H 0.0.0.0 -p 3000"]
 # Test runner
 # -----------------------------------------------------------------------------
 FROM base AS test
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=prisma /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
 ENV NODE_ENV=test
 ENV CI=true
 CMD ["npm", "test", "--", "--passWithNoTests"]
@@ -104,11 +112,12 @@ CMD ["npm", "test", "--", "--passWithNoTests"]
 # Prisma Studio
 # -----------------------------------------------------------------------------
 FROM base AS studio
-RUN apk add --no-cache postgresql-client
-COPY --from=deps /app/node_modules ./node_modules
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends postgresql-client \
+  && rm -rf /var/lib/apt/lists/*
+COPY --from=prisma /app/node_modules ./node_modules
 COPY package.json ./
 COPY prisma ./prisma
-RUN npx prisma generate
 EXPOSE 5555
 CMD ["npx", "prisma", "studio", "--hostname", "0.0.0.0", "--port", "5555", "--browser", "none"]
 

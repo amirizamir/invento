@@ -151,6 +151,21 @@ make shell     # exec into app container
 
 ## Troubleshooting
 
+**Prisma binary download fails during build**
+
+The build skips `postinstall` and runs `prisma generate` in a dedicated stage with retries. If it still fails, check outbound HTTPS to `binaries.prisma.sh`:
+
+```bash
+docker run --rm curlimages/curl -I https://binaries.prisma.sh
+```
+
+If blocked, set a mirror before building:
+
+```bash
+export PRISMA_ENGINES_MIRROR=https://your-mirror/prisma
+docker compose --env-file .env.docker build --no-cache
+```
+
 **init-db fails**
 ```bash
 docker compose logs init-db
