@@ -162,7 +162,7 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
                 ["IP Address", vm.ipAddress || "—"],
                 ["FQDN / Hostname", vm.hostname],
                 ["Secondary IPs", vm.secondaryIp || "—"],
-                ["3rd IP Address", vm.tertiaryIp || "—"],
+                ["Additional IP Address", vm.tertiaryIp || "—"],
                 ["SSH Port", vm.sshPort ?? "—"],
                 ["RDP Port", vm.rdpPort ?? "—"],
                 ["Remote Access Method", vm.remoteAccessMethod || "—"],

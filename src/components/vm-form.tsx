@@ -163,7 +163,7 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
           <Field label="IP Address" error={errors.ipAddress?.message}><Input {...register("ipAddress")} /></Field>
           <Field label="FQDN / Hostname *" error={errors.hostname?.message}><Input {...register("hostname")} /></Field>
           <Field label="Secondary IPs"><Input {...register("secondaryIp")} /></Field>
-          <Field label="3rd IP Address"><Input {...register("tertiaryIp")} /></Field>
+          <Field label="Additional IP Address"><Input {...register("tertiaryIp")} /></Field>
           <Field label="SSH Port" error={errors.sshPort?.message}><Input type="number" {...register("sshPort")} /></Field>
           <Field label="RDP Port" error={errors.rdpPort?.message}><Input type="number" {...register("rdpPort")} /></Field>
           <Field label="Remote Access Method">
