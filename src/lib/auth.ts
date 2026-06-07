@@ -3,35 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { logLogin } from "@/lib/audit";
-import { Role } from "@prisma/client";
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      role: Role;
-      department?: string | null;
-    };
-  }
-
-  interface User {
-    id: string;
-    email: string;
-    name: string;
-    role: Role;
-    department?: string | null;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: Role;
-    department?: string | null;
-  }
-}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -82,9 +53,12 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.department = user.department;
+        return {
+          ...token,
+          id: user.id,
+          role: user.role,
+          department: user.department,
+        };
       }
       return token;
     },

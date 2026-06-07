@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 interface AuditLogParams {
   action: string;
@@ -9,6 +10,10 @@ interface AuditLogParams {
   newValue?: unknown;
 }
 
+function toJsonValue(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
 export async function createAuditLog(params: AuditLogParams) {
   return prisma.auditLog.create({
     data: {
@@ -16,8 +21,8 @@ export async function createAuditLog(params: AuditLogParams) {
       entityType: params.entityType,
       entityId: params.entityId,
       userId: params.userId,
-      oldValue: params.oldValue ? JSON.parse(JSON.stringify(params.oldValue)) : undefined,
-      newValue: params.newValue ? JSON.parse(JSON.stringify(params.newValue)) : undefined,
+      oldValue: params.oldValue ? toJsonValue(params.oldValue) : undefined,
+      newValue: params.newValue ? toJsonValue(params.newValue) : undefined,
     },
   });
 }

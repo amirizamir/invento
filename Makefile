@@ -1,60 +1,55 @@
-.PHONY: help up up-dev down down-dev build logs ps reset seed test lint studio shell
+.PHONY: help up up-dev down down-dev build logs ps reset seed test lint studio deploy
 
 help:
-	@echo "VM Inventory Manager — Docker commands"
+	@echo "VM Inventory Manager — Docker commands (Linux)"
 	@echo ""
-	@echo "  make up       Production stack (postgres + init-db + app)"
-	@echo "  make up-dev   Development stack with hot reload"
-	@echo "  make down     Stop production stack"
-	@echo "  make down-dev Stop development stack"
-	@echo "  make build    Build production images"
-	@echo "  make logs     Tail app logs"
-	@echo "  make ps       Show containers"
-	@echo "  make reset    Wipe DB volume and restart"
-	@echo "  make seed     Re-run migration + seed"
-	@echo "  make test     Run Jest tests in Docker"
-	@echo "  make lint     Run ESLint in Docker"
-	@echo "  make studio   Start Prisma Studio (:5555)"
-	@echo "  make shell    Shell into app container"
+	@echo "  make deploy    Run ./deploy.sh (recommended)"
+	@echo "  make up        docker compose up -d --build"
+	@echo "  make down      docker compose down"
+	@echo "  make logs      Tail app logs"
+	@echo "  make ps        Container status"
+	@echo "  make reset     Stop and remove volumes, redeploy"
+	@echo "  make seed      Re-run DB init + seed"
+	@echo "  make test      Run tests in Docker"
+	@echo "  make lint      Run ESLint in Docker"
+	@echo "  make studio    Start Prisma Studio"
 
-ENV_FILE ?= .env.docker
+deploy:
+	@chmod +x deploy.sh && ./deploy.sh
 
 up:
-	docker compose --env-file $(ENV_FILE) up --build -d
+	docker compose up -d --build
 
 up-dev:
-	docker compose -f docker-compose.dev.yml --env-file $(ENV_FILE) up --build
+	docker compose -f docker-compose.dev.yml up --build
 
 down:
-	docker compose --env-file $(ENV_FILE) down
+	docker compose down
 
 down-dev:
-	docker compose -f docker-compose.dev.yml --env-file $(ENV_FILE) down
+	docker compose -f docker-compose.dev.yml down
 
 build:
-	docker compose --env-file $(ENV_FILE) build
+	docker compose build
 
 logs:
-	docker compose --env-file $(ENV_FILE) logs -f app
+	docker compose logs -f app
 
 ps:
-	docker compose --env-file $(ENV_FILE) ps -a
+	docker compose ps -a
 
 reset:
-	docker compose --env-file $(ENV_FILE) down -v
-	docker compose --env-file $(ENV_FILE) up --build -d
+	docker compose down -v
+	docker compose up -d --build
 
 seed:
-	docker compose --env-file $(ENV_FILE) run --rm init-db
+	docker compose run --rm init-db
 
 test:
-	docker compose --env-file $(ENV_FILE) --profile tools run --rm test
+	docker compose --profile tools run --rm test
 
 lint:
-	docker compose --env-file $(ENV_FILE) --profile tools run --rm lint
+	docker compose --profile tools run --rm lint
 
 studio:
-	docker compose --env-file $(ENV_FILE) --profile tools up -d postgres studio
-
-shell:
-	docker compose --env-file $(ENV_FILE) exec app sh
+	docker compose --profile tools up -d postgres studio

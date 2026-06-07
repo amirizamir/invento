@@ -16,15 +16,15 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
-    "docker:up": "docker compose --env-file .env.docker up --build -d",
-    "docker:down": "docker compose --env-file .env.docker down",
-    "docker:dev": "docker compose -f docker-compose.dev.yml --env-file .env.docker up --build",
-    "docker:logs": "docker compose --env-file .env.docker logs -f app",
-    "docker:reset": "docker compose --env-file .env.docker down -v && docker compose --env-file .env.docker up --build -d",
-    "docker:seed": "docker compose --env-file .env.docker run --rm init-db",
-    "docker:test": "docker compose --env-file .env.docker --profile tools run --rm test",
-    "docker:lint": "docker compose --env-file .env.docker --profile tools run --rm lint",
-    "docker:studio": "docker compose --env-file .env.docker --profile tools up -d postgres studio"
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
+    "docker:logs": "docker compose logs -f app",
+    "docker:reset": "docker compose down -v && docker compose up -d --build",
+    "docker:seed": "docker compose run --rm init-db",
+    "docker:test": "docker compose --profile tools run --rm test",
+    "docker:lint": "docker compose --profile tools run --rm lint",
+    "docker:studio": "docker compose --profile tools up -d postgres studio"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -1,13 +1,16 @@
 # =============================================================================
-# VM Inventory Manager — Development stack (hot reload)
-# Start: docker compose -f docker-compose.dev.yml --env-file .env.docker up --build
+# Development stack — hot reload (optional)
+# Usage: docker compose -f docker-compose.dev.yml up --build
 # =============================================================================
+
+name: vm-inventory-dev
 
 services:
   postgres:
     image: postgres:16-alpine
     container_name: vm-inventory-db-dev
     restart: unless-stopped
+    env_file: .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -17,12 +20,16 @@ services:
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vm_inventory}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
       interval: 5s
       timeout: 5s
-      retries: 12
+      retries: 15
     networks:
-      - vm-inventory-dev
+      - backend
 
   app:
     build:
@@ -31,15 +38,16 @@ services:
       target: development
     container_name: vm-inventory-app-dev
     restart: unless-stopped
+    env_file: .env
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production-min-32-chars}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-minimum-32-characters-long}
       NODE_ENV: development
       POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: "5432"
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       SEED_DATABASE: ${SEED_DATABASE:-true}
       WATCHPACK_POLLING: "true"
@@ -52,7 +60,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - vm-inventory-dev
+      - backend
 
 volumes:
   postgres_data_dev:
@@ -63,5 +71,5 @@ volumes:
     name: vm-inventory-next-cache-dev
 
 networks:
-  vm-inventory-dev:
-    name: vm-inventory-dev
+  backend:
+    name: vm-inventory-dev-backend

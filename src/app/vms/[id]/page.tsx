@@ -19,10 +19,10 @@ import {
   VM_STATUS_LABELS,
   CRITICALITY_LABELS,
   POWER_STATE_LABELS,
-  type VMInput,
 } from "@/lib/validations";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { canModifyVMs } from "@/lib/rbac";
+import { toVMFormValues } from "@/lib/vm-mapper";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 
@@ -113,12 +113,7 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
 
         {editing ? (
           <VMForm
-            defaultValues={{
-              ...vm,
-              ipAddress: vm.ipAddress || "",
-              lastPatchDate: vm.lastPatchDate ? new Date(vm.lastPatchDate) : undefined,
-              endOfLifeDate: vm.endOfLifeDate ? new Date(vm.endOfLifeDate) : undefined,
-            }}
+            defaultValues={toVMFormValues(vm)}
             onSubmit={(data) => updateMutation.mutateAsync(data)}
             loading={updateMutation.isPending}
             submitLabel="Save Changes"

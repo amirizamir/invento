@@ -27,53 +27,46 @@ Enterprise-grade full-stack web application for centralized virtual machine inve
 - Dark/light mode
 - Responsive design
 
-## Quick Start (Docker — recommended)
+## Quick Start — Linux Docker (recommended)
 
-Everything runs in Docker. You only need **Docker Engine + Compose** (no Node.js on the host).
+**No Node.js required on the host.** Everything runs in Docker.
 
 See **[DOCKER.md](./DOCKER.md)** for the full guide.
 
 ```bash
-cp .env.docker .env
+cd invento
+cp .env.example .env
+nano .env          # set NEXTAUTH_URL=http://YOUR_SERVER_IP:3000
 
-# Linux one-liner
-chmod +x scripts/docker-up.sh
-./scripts/docker-up.sh prod
-
-# Or standard compose
-docker compose --env-file .env.docker up --build -d
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-On a remote Linux server, set `NEXTAUTH_URL` in `.env.docker` to your server IP:
+Or manually:
 
 ```bash
-NEXTAUTH_URL=http://192.168.1.100:3000
+docker compose up -d --build
 ```
 
-Open **http://YOUR_HOST:3000** and sign in with the credentials below.
+Open the URL from `NEXTAUTH_URL` in `.env`.
 
-### All Docker components
+### Docker commands
 
-| Component      | Command |
-|----------------|---------|
-| Production app | `docker compose --env-file .env.docker up --build -d` |
-| Dev (hot reload) | `docker compose -f docker-compose.dev.yml --env-file .env.docker up --build` |
-| Tests (Jest)   | `docker compose --env-file .env.docker --profile tools run --rm test` |
-| Lint (ESLint)  | `docker compose --env-file .env.docker --profile tools run --rm lint` |
-| Prisma Studio  | `docker compose --env-file .env.docker --profile tools up -d postgres studio` |
-| Re-seed DB     | `docker compose --env-file .env.docker run --rm init-db` |
-
-### npm / Make shortcuts
+| Action | Command |
+|--------|---------|
+| Deploy | `./deploy.sh` or `docker compose up -d --build` |
+| Logs | `docker compose logs -f app` |
+| Stop | `docker compose down` |
+| Reset DB | `docker compose down -v && docker compose up -d --build` |
+| Re-seed | `docker compose run --rm init-db` |
+| Dev mode | `docker compose -f docker-compose.dev.yml up --build` |
+| Tests | `docker compose --profile tools run --rm test` |
+| Prisma Studio | `docker compose --profile tools up -d studio` |
 
 ```bash
-npm run docker:up       # production
-npm run docker:dev      # development
-npm run docker:test     # tests
-npm run docker:lint     # lint
-npm run docker:studio   # prisma studio
-npm run docker:reset    # wipe DB + restart
-
-make up    make test    make studio    make seed    make reset
+make deploy    # same as ./deploy.sh
+make logs
+make reset
 ```
 
 ---

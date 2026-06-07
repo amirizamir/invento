@@ -1,17 +1,24 @@
 # =============================================================================
-# VM Inventory Manager — Production + Tools
-# Start:  docker compose --env-file .env.docker up --build -d
-# Tools:  docker compose --env-file .env.docker --profile tools up studio
+# VM Inventory Manager — Production stack (Linux / Docker only)
+#
+# Quick start:
+#   cp .env.example .env
+#   nano .env                          # set NEXTAUTH_URL + passwords
+#   docker compose up -d --build
+#
+# Optional:
+#   docker compose --profile tools up -d studio   # Prisma Studio :5555
+#   docker compose --profile tools run --rm test  # run tests
 # =============================================================================
 
+name: vm-inventory
+
 services:
-  # ---------------------------------------------------------------------------
-  # PostgreSQL
-  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: vm-inventory-db
     restart: unless-stopped
+    env_file: .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -21,17 +28,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vm_inventory}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
       interval: 5s
       timeout: 5s
-      retries: 12
-      start_period: 15s
+      retries: 15
+      start_period: 20s
     networks:
-      - vm-inventory-net
+      - backend
 
-  # ---------------------------------------------------------------------------
-  # One-shot DB init (schema + seed)
-  # ---------------------------------------------------------------------------
   init-db:
     build:
       context: .
@@ -39,35 +47,39 @@ services:
       target: migrator
     container_name: vm-inventory-init-db
     restart: "no"
+    env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
       POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: "5432"
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       SEED_DATABASE: ${SEED_DATABASE:-true}
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - vm-inventory-net
+      - backend
 
-  # ---------------------------------------------------------------------------
-  # Next.js application (production)
-  # ---------------------------------------------------------------------------
   app:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
+      args:
+        NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-docker-build-secret-minimum-32-characters}
     container_name: vm-inventory-app
     restart: unless-stopped
+    env_file: .env
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-this-to-a-secure-random-string-in-production}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-generate-a-random-32-char-secret}
       NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -78,27 +90,25 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
     networks:
-      - vm-inventory-net
+      - backend
 
-  # ---------------------------------------------------------------------------
-  # Tools profile — optional services
-  # ---------------------------------------------------------------------------
+  # --- Optional: docker compose --profile tools ... ---
   test:
     profiles: [tools]
     build:
       context: .
       dockerfile: Dockerfile
       target: test
-    container_name: vm-inventory-test
+    env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - vm-inventory-net
+      - backend
 
   lint:
     profiles: [tools]
@@ -106,9 +116,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: lint
-    container_name: vm-inventory-lint
     networks:
-      - vm-inventory-net
+      - backend
 
   studio:
     profiles: [tools]
@@ -118,6 +127,7 @@ services:
       target: studio
     container_name: vm-inventory-studio
     restart: unless-stopped
+    env_file: .env
     ports:
       - "${STUDIO_PORT:-5555}:5555"
     environment:
@@ -126,12 +136,12 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - vm-inventory-net
+      - backend
 
 volumes:
   postgres_data:
     name: vm-inventory-postgres-data
 
 networks:
-  vm-inventory-net:
-    name: vm-inventory-net
+  backend:
+    name: vm-inventory-backend

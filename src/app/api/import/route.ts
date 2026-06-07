@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import Papa from "papaparse";
 import {
   apiSuccess,
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const errors: Array<{ row: number; error: string }> = [];
+    const rowErrors: Array<{ row: number; error: string }> = [];
     let successful = 0;
 
     for (let i = 0; i < parsed.data.length; i++) {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (existing) {
-          errors.push({ row: i + 2, error: `Duplicate: ${data.hostname} / ${data.vmName}` });
+          rowErrors.push({ row: i + 2, error: `Duplicate: ${data.hostname} / ${data.vmName}` });
           continue;
         }
 
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
         });
         successful++;
       } catch (err) {
-        errors.push({
+        rowErrors.push({
           row: i + 2,
           error: err instanceof Error ? err.message : "Unknown error",
         });
@@ -130,10 +131,10 @@ export async function POST(request: NextRequest) {
     const completed = await prisma.importJob.update({
       where: { id: importJob.id },
       data: {
-        status: errors.length === parsed.data.length ? "FAILED" : "COMPLETED",
+        status: rowErrors.length === parsed.data.length ? "FAILED" : "COMPLETED",
         successfulRecords: successful,
-        failedRecords: errors.length,
-        errors: errors.length > 0 ? errors : undefined,
+        failedRecords: rowErrors.length,
+        errors: rowErrors.length > 0 ? (rowErrors as Prisma.InputJsonValue) : undefined,
         completedAt: new Date(),
       },
     });
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest) {
       fileName: file.name,
       total: parsed.data.length,
       successful,
-      failed: errors.length,
+      failed: rowErrors.length,
     });
 
     return apiSuccess(completed, 201);
