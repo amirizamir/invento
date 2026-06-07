@@ -1,48 +1,137 @@
-version: "3.8"
+# =============================================================================
+# VM Inventory Manager — Production + Tools
+# Start:  docker compose --env-file .env.docker up --build -d
+# Tools:  docker compose --env-file .env.docker --profile tools up studio
+# =============================================================================
 
 services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL
+  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: vm-inventory-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: vm_inventory
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vm_inventory}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vm_inventory}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 12
+      start_period: 15s
+    networks:
+      - vm-inventory-net
 
+  # ---------------------------------------------------------------------------
+  # One-shot DB init (schema + seed)
+  # ---------------------------------------------------------------------------
+  init-db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: vm-inventory-init-db
+    restart: "no"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      SEED_DATABASE: ${SEED_DATABASE:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - vm-inventory-net
+
+  # ---------------------------------------------------------------------------
+  # Next.js application (production)
+  # ---------------------------------------------------------------------------
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
     container_name: vm-inventory-app
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vm_inventory?schema=public
-      NEXTAUTH_URL: http://localhost:3000
-      NEXTAUTH_SECRET: change-this-to-a-secure-random-string-in-production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-this-to-a-secure-random-string-in-production}
       NODE_ENV: production
     depends_on:
       postgres:
         condition: service_healthy
+      init-db:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - vm-inventory-net
 
-  migrate:
-    build: .
-    container_name: vm-inventory-migrate
-    command: sh -c "npx prisma db push && npx tsx prisma/seed.ts"
+  # ---------------------------------------------------------------------------
+  # Tools profile — optional services
+  # ---------------------------------------------------------------------------
+  test:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    container_name: vm-inventory-test
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vm_inventory?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - vm-inventory-net
+
+  lint:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: lint
+    container_name: vm-inventory-lint
+    networks:
+      - vm-inventory-net
+
+  studio:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: studio
+    container_name: vm-inventory-studio
+    restart: unless-stopped
+    ports:
+      - "${STUDIO_PORT:-5555}:5555"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - vm-inventory-net
 
 volumes:
   postgres_data:
+    name: vm-inventory-postgres-data
+
+networks:
+  vm-inventory-net:
+    name: vm-inventory-net

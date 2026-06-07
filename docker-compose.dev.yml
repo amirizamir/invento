@@ -1,0 +1,67 @@
+# =============================================================================
+# VM Inventory Manager — Development stack (hot reload)
+# Start: docker compose -f docker-compose.dev.yml --env-file .env.docker up --build
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vm-inventory-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vm_inventory}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vm_inventory}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - vm-inventory-dev
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: vm-inventory-app-dev
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production-min-32-chars}
+      NODE_ENV: development
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      SEED_DATABASE: ${SEED_DATABASE:-true}
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - .:/app
+      - node_modules_dev:/app/node_modules
+      - next_cache_dev:/app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - vm-inventory-dev
+
+volumes:
+  postgres_data_dev:
+    name: vm-inventory-postgres-data-dev
+  node_modules_dev:
+    name: vm-inventory-node-modules-dev
+  next_cache_dev:
+    name: vm-inventory-next-cache-dev
+
+networks:
+  vm-inventory-dev:
+    name: vm-inventory-dev

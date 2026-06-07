@@ -27,41 +27,71 @@ Enterprise-grade full-stack web application for centralized virtual machine inve
 - Dark/light mode
 - Responsive design
 
-## Quick Start
+## Quick Start (Docker — recommended)
+
+Everything runs in Docker. You only need **Docker Engine + Compose** (no Node.js on the host).
+
+See **[DOCKER.md](./DOCKER.md)** for the full guide.
+
+```bash
+cp .env.docker .env
+
+# Linux one-liner
+chmod +x scripts/docker-up.sh
+./scripts/docker-up.sh prod
+
+# Or standard compose
+docker compose --env-file .env.docker up --build -d
+```
+
+On a remote Linux server, set `NEXTAUTH_URL` in `.env.docker` to your server IP:
+
+```bash
+NEXTAUTH_URL=http://192.168.1.100:3000
+```
+
+Open **http://YOUR_HOST:3000** and sign in with the credentials below.
+
+### All Docker components
+
+| Component      | Command |
+|----------------|---------|
+| Production app | `docker compose --env-file .env.docker up --build -d` |
+| Dev (hot reload) | `docker compose -f docker-compose.dev.yml --env-file .env.docker up --build` |
+| Tests (Jest)   | `docker compose --env-file .env.docker --profile tools run --rm test` |
+| Lint (ESLint)  | `docker compose --env-file .env.docker --profile tools run --rm lint` |
+| Prisma Studio  | `docker compose --env-file .env.docker --profile tools up -d postgres studio` |
+| Re-seed DB     | `docker compose --env-file .env.docker run --rm init-db` |
+
+### npm / Make shortcuts
+
+```bash
+npm run docker:up       # production
+npm run docker:dev      # development
+npm run docker:test     # tests
+npm run docker:lint     # lint
+npm run docker:studio   # prisma studio
+npm run docker:reset    # wipe DB + restart
+
+make up    make test    make studio    make seed    make reset
+```
+
+---
+
+## Local Development (without Docker)
 
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL 16+ (or Docker)
-
-### Local Development
+- PostgreSQL 16+
 
 ```bash
-# Install dependencies
 npm install
-
-# Copy environment file
 cp .env.example .env
-
-# Start PostgreSQL (Docker)
-docker compose up postgres -d
-
-# Push schema and seed data
+docker compose up postgres -d   # DB only
 npm run db:push
 npm run db:seed
-
-# Start development server
 npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
-### Docker (Full Stack)
-
-```bash
-docker compose up -d postgres
-docker compose run migrate
-docker compose up -d app
 ```
 
 ## Default Credentials
