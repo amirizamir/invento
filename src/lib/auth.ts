@@ -1,0 +1,101 @@
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import prisma from "@/lib/prisma";
+import { logLogin } from "@/lib/audit";
+import { Role } from "@prisma/client";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      role: Role;
+      department?: string | null;
+    };
+  }
+
+  interface User {
+    id: string;
+    email: string;
+    name: string;
+    role: Role;
+    department?: string | null;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role: Role;
+    department?: string | null;
+  }
+}
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email.toLowerCase() },
+        });
+
+        if (!user || !user.isActive) {
+          throw new Error("Invalid credentials");
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) {
+          throw new Error("Invalid credentials");
+        }
+
+        await logLogin(user.id);
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          department: user.department,
+        };
+      },
+    }),
+  ],
+  session: {
+    strategy: "jwt",
+    maxAge: 8 * 60 * 60,
+  },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.department = user.department;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.department = token.department;
+      }
+      return session;
+    },
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+};

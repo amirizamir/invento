@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+enum VMStatus {
+  ACTIVE
+  INACTIVE
+  DECOMMISSIONED
+  MAINTENANCE
+  PENDING
+}
+
+enum Platform {
+  VMWARE
+  HYPERV
+  AWS
+  AZURE
+  GCP
+  OTHER
+}
+
+enum Criticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Environment {
+  DEV
+  TEST
+  QA
+  STAGING
+  PRODUCTION
+}
+
+enum PowerState {
+  ON
+  OFF
+  SUSPENDED
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationType {
+  EOL_WARNING
+  BACKUP_MISSING
+  MONITORING_MISSING
+  IMPORT_FAILED
+  SYSTEM_ALERT
+  VM_CREATED
+  VM_UPDATED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          Role           @default(VIEWER)
+  department    String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  importJobs    ImportJob[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model VirtualMachine {
+  id                 String       @id @default(cuid())
+  hostname           String
+  vmName             String
+  description        String?
+  environment        Environment  @default(DEV)
+  platform           Platform     @default(OTHER)
+  ipAddress          String?
+  secondaryIp        String?
+  osType             String?
+  osVersion          String?
+  cpuCores           Int          @default(1)
+  memoryGB           Int          @default(4)
+  storageGB          Int          @default(50)
+  owner              String?
+  department         String?
+  businessUnit       String?
+  application        String?
+  criticality        Criticality  @default(MEDIUM)
+  status             VMStatus     @default(PENDING)
+  powerState         PowerState   @default(OFF)
+  backupEnabled      Boolean      @default(false)
+  monitoringEnabled  Boolean      @default(false)
+  patchGroup         String?
+  location           String?
+  datacenter         String?
+  cluster            String?
+  resourcePool       String?
+  costCenter         String?
+  tags               String[]     @default([])
+  notes              String?
+  createdDate        DateTime     @default(now())
+  updatedDate        DateTime     @updatedAt
+  lastPatchDate      DateTime?
+  endOfLifeDate      DateTime?
+
+  @@index([hostname])
+  @@index([vmName])
+  @@index([platform])
+  @@index([environment])
+  @@index([status])
+  @@index([criticality])
+  @@index([department])
+  @@index([owner])
+  @@index([application])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  userId     String?
+  timestamp  DateTime @default(now())
+  oldValue   Json?
+  newValue   Json?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType])
+  @@index([entityId])
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model ImportJob {
+  id                String       @id @default(cuid())
+  fileName          String
+  status            ImportStatus @default(PENDING)
+  totalRecords      Int          @default(0)
+  successfulRecords Int          @default(0)
+  failedRecords     Int          @default(0)
+  errors            Json?
+  startedAt         DateTime     @default(now())
+  completedAt       DateTime?
+  userId            String?
+  user              User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([userId])
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  description String
+  read        Boolean          @default(false)
+  userId      String
+  createdAt   DateTime         @default(now())
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+}
+
+model SavedView {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  filters   Json
+  columns   Json
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model VMDraft {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  data      Json
+  updatedAt DateTime @updatedAt
+}
