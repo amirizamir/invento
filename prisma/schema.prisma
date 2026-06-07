@@ -28,6 +28,8 @@ enum Platform {
   AWS
   AZURE
   GCP
+  PROXMOX
+  OPENSTACK
   OTHER
 }
 
@@ -88,43 +90,68 @@ model User {
 }
 
 model VirtualMachine {
-  id                 String       @id @default(cuid())
-  hostname           String
-  vmName             String
-  description        String?
-  environment        Environment  @default(DEV)
-  platform           Platform     @default(OTHER)
-  ipAddress          String?
-  secondaryIp        String?
-  osType             String?
-  osVersion          String?
-  cpuCores           Int          @default(1)
-  memoryGB           Int          @default(4)
-  storageGB          Int          @default(50)
-  owner              String?
-  department         String?
-  businessUnit       String?
-  application        String?
-  criticality        Criticality  @default(MEDIUM)
-  status             VMStatus     @default(PENDING)
-  powerState         PowerState   @default(OFF)
-  backupEnabled      Boolean      @default(false)
-  monitoringEnabled  Boolean      @default(false)
-  patchGroup         String?
-  location           String?
-  datacenter         String?
-  cluster            String?
-  resourcePool       String?
-  costCenter         String?
-  tags               String[]     @default([])
-  notes              String?
-  createdDate        DateTime     @default(now())
-  updatedDate        DateTime     @updatedAt
-  lastPatchDate      DateTime?
-  endOfLifeDate      DateTime?
+  id                        String       @id @default(cuid())
+  vmId                      String?
+  hostname                  String
+  vmName                    String
+  description               String?
+  environment               Environment  @default(DEV)
+  platform                  Platform     @default(OTHER)
+  useCase                   String?
+  ipAddress                 String?
+  secondaryIp               String?
+  tertiaryIp                String?
+  sshPort                   Int?
+  rdpPort                   Int?
+  remoteAccessMethod        String?
+  dnsRecords                String?
+  vlan                      String?
+  firewallZone              String?
+  osType                    String?
+  osVersion                 String?
+  kernelVersion             String?
+  installedServices         String?
+  cpuCores                  Int          @default(1)
+  memoryGB                  Int          @default(4)
+  storageGB                 Int          @default(50)
+  physicalHost              String?
+  datacenter                String?
+  diskType                  String?
+  storageDatastore          String?
+  haEnabled                 Boolean      @default(false)
+  cluster                   String?
+  backupPolicy              String?
+  backupType                String?
+  patchLevel                String?
+  antivirusInstalled        Boolean      @default(false)
+  lastVulnerabilityScanDate  DateTime?
+  cisStigHardening          Boolean      @default(false)
+  encryptionAtRest          Boolean      @default(false)
+  complianceTags            String[]     @default([])
+  owner                     String?
+  department                String?
+  businessUnit              String?
+  application               String?
+  criticality               Criticality  @default(MEDIUM)
+  status                    VMStatus     @default(PENDING)
+  powerState                PowerState   @default(OFF)
+  backupEnabled             Boolean      @default(false)
+  monitoringEnabled         Boolean      @default(false)
+  patchGroup                String?
+  location                  String?
+  resourcePool              String?
+  costCenter                String?
+  tags                      String[]     @default([])
+  notes                     String?
+  createdBy                 String?
+  createdDate               DateTime     @default(now())
+  updatedDate               DateTime     @updatedAt
+  lastPatchDate             DateTime?
+  endOfLifeDate             DateTime?
 
   @@index([hostname])
   @@index([vmName])
+  @@index([vmId])
   @@index([platform])
   @@index([environment])
   @@index([status])
@@ -132,6 +159,7 @@ model VirtualMachine {
   @@index([department])
   @@index([owner])
   @@index([application])
+  @@index([physicalHost])
 }
 
 model AuditLog {

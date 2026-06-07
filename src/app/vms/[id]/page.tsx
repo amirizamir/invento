@@ -18,8 +18,8 @@ import {
   ENVIRONMENT_LABELS,
   VM_STATUS_LABELS,
   CRITICALITY_LABELS,
-  POWER_STATE_LABELS,
 } from "@/lib/validations";
+import type { VMInput } from "@/lib/validations";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { canModifyVMs } from "@/lib/rbac";
 import { toVMFormValues } from "@/lib/vm-mapper";
@@ -86,6 +86,8 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
     );
   }
 
+  const boolLabel = (value: boolean) => (value ? "Yes" : "No");
+
   return (
     <AppShell breadcrumbs={[
       { label: "Dashboard", href: "/dashboard" },
@@ -119,22 +121,96 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
             submitLabel="Save Changes"
           />
         ) : (
-          <Tabs defaultValue="overview">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
+          <Tabs defaultValue="identity">
+            <TabsList className="flex flex-wrap h-auto gap-1">
+              <TabsTrigger value="identity">Identity & Core</TabsTrigger>
+              <TabsTrigger value="compute">OS & Compute</TabsTrigger>
+              <TabsTrigger value="network">Network & Access</TabsTrigger>
               <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
+              <TabsTrigger value="backup">Backup & DR</TabsTrigger>
+              <TabsTrigger value="security">Patching & Security</TabsTrigger>
               <TabsTrigger value="ownership">Ownership</TabsTrigger>
-              <TabsTrigger value="lifecycle">Lifecycle</TabsTrigger>
               <TabsTrigger value="audit">Audit Timeline</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-4">
-              <DetailCard title="Overview" items={[
-                ["Hostname", vm.hostname],
+            <TabsContent value="identity">
+              <DetailCard title="Identity & Core" items={[
+                ["VM ID", vm.vmId || vm.id],
                 ["VM Name", vm.vmName],
-                ["Description", vm.description || "—"],
-                ["Tags", vm.tags?.length ? vm.tags.join(", ") : "—"],
+                ["Environment", ENVIRONMENT_LABELS[vm.environment]],
+                ["Application Name", vm.application || "—"],
+                ["Use Case", vm.useCase || "—"],
+                ["Status", VM_STATUS_LABELS[vm.status]],
+              ]} />
+            </TabsContent>
+
+            <TabsContent value="compute">
+              <DetailCard title="OS & Compute" items={[
+                ["OS Type", vm.osType || "—"],
+                ["OS Version", vm.osVersion || "—"],
+                ["OS End-of-Life Date", formatDate(vm.endOfLifeDate)],
+                ["Kernel Version", vm.kernelVersion || "—"],
+                ["Installed Services", vm.installedServices || "—"],
+                ["vCPU", vm.cpuCores],
+                ["RAM (GB)", vm.memoryGB],
+                ["HDD Size (GB)", vm.storageGB],
+              ]} />
+            </TabsContent>
+
+            <TabsContent value="network">
+              <DetailCard title="Network & Access" items={[
+                ["IP Address", vm.ipAddress || "—"],
+                ["FQDN / Hostname", vm.hostname],
+                ["Secondary IPs", vm.secondaryIp || "—"],
+                ["3rd IP Address", vm.tertiaryIp || "—"],
+                ["SSH Port", vm.sshPort ?? "—"],
+                ["RDP Port", vm.rdpPort ?? "—"],
+                ["Remote Access Method", vm.remoteAccessMethod || "—"],
+                ["DNS Record(s)", vm.dnsRecords || "—"],
+                ["VLAN", vm.vlan || "—"],
+                ["Firewall Zone / Security Group", vm.firewallZone || "—"],
+              ]} />
+            </TabsContent>
+
+            <TabsContent value="infrastructure">
+              <DetailCard title="Infrastructure" items={[
+                ["Platform", PLATFORM_LABELS[vm.platform]],
+                ["Physical Host", vm.physicalHost || "—"],
+                ["Data Center", vm.datacenter || "—"],
+                ["Disk Type", vm.diskType || "—"],
+                ["Storage Datastore / Pool", vm.storageDatastore || "—"],
+                ["HA Enabled", boolLabel(vm.haEnabled)],
+                ["Cluster Membership", vm.cluster || "—"],
+              ]} />
+            </TabsContent>
+
+            <TabsContent value="backup">
+              <DetailCard title="Backup & DR" items={[
+                ["Backup Policy", vm.backupPolicy || "—"],
+                ["Backup Type", vm.backupType || "—"],
+                ["Backup Enabled", boolLabel(vm.backupEnabled)],
+              ]} />
+            </TabsContent>
+
+            <TabsContent value="security">
+              <DetailCard title="Patching & Security" items={[
+                ["Patch Level", vm.patchLevel || "—"],
+                ["Last Patched Date", formatDate(vm.lastPatchDate)],
+                ["Antivirus / EDR Agent Installed", boolLabel(vm.antivirusInstalled)],
+                ["Last Vulnerability Scan Date", formatDate(vm.lastVulnerabilityScanDate)],
+                ["CIS/STIG Hardening Applied", boolLabel(vm.cisStigHardening)],
+                ["Encryption at Rest", boolLabel(vm.encryptionAtRest)],
+                ["Compliance Tags", vm.complianceTags?.length ? vm.complianceTags.join(", ") : "—"],
+              ]} />
+            </TabsContent>
+
+            <TabsContent value="ownership" className="space-y-4">
+              <DetailCard title="Ownership & Criticality" items={[
+                ["Criticality", CRITICALITY_LABELS[vm.criticality]],
+                ["Business Unit", vm.businessUnit || "—"],
+                ["Department", vm.department || "—"],
+                ["Created By", vm.createdBy || "—"],
+                ["Created Date", formatDate(vm.createdDate)],
               ]} />
               {vm.notes && (
                 <Card>
@@ -142,52 +218,6 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
                   <CardContent><p className="text-sm whitespace-pre-wrap">{vm.notes}</p></CardContent>
                 </Card>
               )}
-            </TabsContent>
-
-            <TabsContent value="infrastructure">
-              <DetailCard title="Infrastructure" items={[
-                ["Platform", PLATFORM_LABELS[vm.platform]],
-                ["Datacenter", vm.datacenter || "—"],
-                ["Cluster", vm.cluster || "—"],
-                ["Resource Pool", vm.resourcePool || "—"],
-                ["Location", vm.location || "—"],
-                ["IP Address", vm.ipAddress || "—"],
-                ["Secondary IP", vm.secondaryIp || "—"],
-              ]} />
-            </TabsContent>
-
-            <TabsContent value="resources">
-              <DetailCard title="Resources" items={[
-                ["CPU Cores", vm.cpuCores],
-                ["Memory", `${vm.memoryGB} GB`],
-                ["Storage", `${vm.storageGB} GB`],
-                ["OS Type", vm.osType || "—"],
-                ["OS Version", vm.osVersion || "—"],
-              ]} />
-            </TabsContent>
-
-            <TabsContent value="ownership">
-              <DetailCard title="Ownership" items={[
-                ["Owner", vm.owner || "—"],
-                ["Department", vm.department || "—"],
-                ["Business Unit", vm.businessUnit || "—"],
-                ["Application", vm.application || "—"],
-                ["Cost Center", vm.costCenter || "—"],
-              ]} />
-            </TabsContent>
-
-            <TabsContent value="lifecycle">
-              <DetailCard title="Lifecycle & Operations" items={[
-                ["Created Date", formatDate(vm.createdDate)],
-                ["Last Updated", formatDate(vm.updatedDate)],
-                ["Last Patch Date", formatDate(vm.lastPatchDate)],
-                ["End of Life", formatDate(vm.endOfLifeDate)],
-                ["Status", VM_STATUS_LABELS[vm.status]],
-                ["Power State", POWER_STATE_LABELS[vm.powerState]],
-                ["Backup", vm.backupEnabled ? "Enabled" : "Disabled"],
-                ["Monitoring", vm.monitoringEnabled ? "Enabled" : "Disabled"],
-                ["Patch Group", vm.patchGroup || "—"],
-              ]} />
             </TabsContent>
 
             <TabsContent value="audit">

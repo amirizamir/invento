@@ -47,6 +47,7 @@ export default function NewVMPage() {
       <div className="space-y-6 max-w-4xl">
         <PageHeader title="Create Virtual Machine" description="Add a new VM to the inventory" />
         <VMForm
+          defaultValues={{ createdBy: session?.user?.name ?? undefined }}
           onSubmit={(data) => mutation.mutateAsync(data)}
           loading={mutation.isPending}
           submitLabel="Create VM"

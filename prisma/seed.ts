@@ -61,6 +61,12 @@ const LOCATIONS = [
 
 const DATACENTERS = ["DC-East", "DC-West", "DC-EU", "DC-APAC", "Cloud-Primary"];
 const CLUSTERS = ["Cluster-A", "Cluster-B", "Cluster-Prod", "Cluster-Dev", "Cluster-DR"];
+const DISK_TYPES = ["Thin", "Thick"];
+const BACKUP_TYPES = ["Full", "Incremental", "Differential", "Snapshot"];
+const REMOTE_ACCESS = ["SSH", "RDP", "VPN", "Console", "Bastion"];
+const COMPLIANCE_TAGS = ["PCI", "HIPAA", "SOX", "ISO27001"];
+const USE_CASES = ["Production Workload", "Development", "Testing", "DR Replica", "Database", "Web Hosting"];
+const PATCH_LEVELS = ["Current", "N-1", "N-2", "Outdated"];
 const OWNERS = [
   "John Smith",
   "Jane Doe",
@@ -95,13 +101,14 @@ async function main() {
   await prisma.virtualMachine.deleteMany();
   await prisma.user.deleteMany();
 
-  const passwordHash = await bcrypt.hash("Password123!", 12);
+  const adminPasswordHash = await bcrypt.hash("Moore!*%it", 12);
+  const defaultPasswordHash = await bcrypt.hash("Password123!", 12);
 
   const admin = await prisma.user.create({
     data: {
-      name: "System Administrator",
-      email: "admin@vminventory.local",
-      password: passwordHash,
+      name: "Zamir Amiri",
+      email: "zamir.amiri@ahg.local",
+      password: adminPasswordHash,
       role: Role.ADMIN,
       department: "IT Infrastructure",
     },
@@ -110,8 +117,8 @@ async function main() {
   const operator = await prisma.user.create({
     data: {
       name: "Operations User",
-      email: "operator@vminventory.local",
-      password: passwordHash,
+      email: "operator@ahg.local",
+      password: defaultPasswordHash,
       role: Role.OPERATOR,
       department: "Operations",
     },
@@ -120,8 +127,8 @@ async function main() {
   const viewer = await prisma.user.create({
     data: {
       name: "Read Only User",
-      email: "viewer@vminventory.local",
-      password: passwordHash,
+      email: "viewer@ahg.local",
+      password: defaultPasswordHash,
       role: Role.VIEWER,
       department: "Finance",
     },
@@ -163,18 +170,43 @@ async function main() {
     const createdDate = randomDate(new Date("2022-01-01"), new Date("2025-06-01"));
 
     vms.push({
+      vmId: `VM-${String(i).padStart(5, "0")}`,
       hostname: `vm-${platform.toLowerCase()}-${String(i).padStart(3, "0")}.corp.local`,
       vmName: `${randomItem(APPLICATIONS).replace(/\s+/g, "-")}-${env}-${i}`,
       description: `Virtual machine for ${randomItem(APPLICATIONS)} in ${env} environment`,
       environment: env,
       platform,
+      useCase: randomItem(USE_CASES),
       ipAddress: `10.${randomInt(0, 255)}.${randomInt(0, 255)}.${randomInt(1, 254)}`,
       secondaryIp: Math.random() > 0.7 ? `172.${randomInt(16, 31)}.${randomInt(0, 255)}.${randomInt(1, 254)}` : null,
+      tertiaryIp: Math.random() > 0.85 ? `192.168.${randomInt(0, 255)}.${randomInt(1, 254)}` : null,
+      sshPort: randomItem([22, 2222]),
+      rdpPort: Math.random() > 0.5 ? 3389 : null,
+      remoteAccessMethod: randomItem(REMOTE_ACCESS),
+      dnsRecords: `vm-${i}.corp.local`,
+      vlan: `VLAN-${randomInt(10, 99)}`,
+      firewallZone: randomItem(["DMZ", "Internal", "Restricted", "Public"]),
       osType: os.type,
       osVersion: randomItem(os.versions),
+      kernelVersion: randomItem(["5.15.0", "6.1.0", "6.5.0", "5.4.0"]),
+      installedServices: randomItem(["nginx, ssh", "apache, mysql", "docker, kubelet", "sshd, cron"]),
       cpuCores: randomItem([2, 4, 8, 16, 32]),
       memoryGB: randomItem([4, 8, 16, 32, 64, 128]),
       storageGB: randomItem([50, 100, 250, 500, 1000, 2000]),
+      physicalHost: `host-${randomInt(1, 20)}.dc.local`,
+      datacenter: randomItem(DATACENTERS),
+      diskType: randomItem(DISK_TYPES),
+      storageDatastore: randomItem(["datastore1", "datastore2", "vsan-datastore", "ceph-pool"]),
+      haEnabled: Math.random() > 0.4,
+      cluster: randomItem(CLUSTERS),
+      backupPolicy: randomItem(["Daily", "Weekly", "Monthly", "Continuous"]),
+      backupType: randomItem(BACKUP_TYPES),
+      patchLevel: randomItem(PATCH_LEVELS),
+      antivirusInstalled: Math.random() > 0.2,
+      lastVulnerabilityScanDate: randomDate(createdDate, new Date()),
+      cisStigHardening: Math.random() > 0.5,
+      encryptionAtRest: Math.random() > 0.3,
+      complianceTags: Math.random() > 0.6 ? [randomItem(COMPLIANCE_TAGS)] : [],
       owner: randomItem(OWNERS),
       department: dept,
       businessUnit: `${dept} BU`,
@@ -186,12 +218,11 @@ async function main() {
       monitoringEnabled,
       patchGroup: randomItem(["Monthly", "Quarterly", "Critical-Only", "Auto-Patch"]),
       location: randomItem(LOCATIONS),
-      datacenter: randomItem(DATACENTERS),
-      cluster: randomItem(CLUSTERS),
       resourcePool: `RP-${env}`,
       costCenter: `CC-${randomInt(1000, 9999)}`,
       tags: [env.toLowerCase(), platform.toLowerCase(), dept.toLowerCase().replace(/\s+/g, "-")],
       notes: Math.random() > 0.5 ? `Notes for VM ${i}: Standard configuration applied.` : null,
+      createdBy: randomItem([admin.name, operator.name]),
       createdDate,
       lastPatchDate: randomDate(createdDate, new Date()),
       endOfLifeDate:
@@ -246,7 +277,7 @@ async function main() {
     {
       type: NotificationType.SYSTEM_ALERT,
       title: "System Initialized",
-      description: "VM Inventory Manager has been initialized with seed data.",
+      description: "AHG has been initialized with seed data.",
       userId: admin.id,
     },
   ];
@@ -267,10 +298,10 @@ async function main() {
   });
 
   console.log("\n🎉 Seed completed!");
-  console.log("\nDefault credentials (password: Password123!):");
-  console.log("  Admin:    admin@vminventory.local");
-  console.log("  Operator: operator@vminventory.local");
-  console.log("  Viewer:   viewer@vminventory.local");
+  console.log("\nDefault credentials:");
+  console.log("  Admin:    zamir.amiri / Moore!*%it");
+  console.log("  Operator: operator@ahg.local / Password123!");
+  console.log("  Viewer:   viewer@ahg.local / Password123!");
 }
 
 main()

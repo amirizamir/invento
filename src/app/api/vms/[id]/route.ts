@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { apiSuccess, handleApiError } from "@/lib/api-utils";
 import { requirePermission } from "@/lib/session";
 import { vmSchema } from "@/lib/validations";
+import { toVMUpdateData } from "@/lib/vm-data";
 import { logVMUpdate, logVMDelete } from "@/lib/audit";
 
 interface RouteParams {
@@ -48,10 +49,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const vm = await prisma.virtualMachine.update({
       where: { id },
-      data: {
-        ...data,
-        ipAddress: data.ipAddress || null,
-      },
+      data: toVMUpdateData(data),
     });
 
     await logVMUpdate(session.user.id, id, existing, vm);

@@ -9,7 +9,7 @@ import {
 } from "@prisma/client";
 
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -39,26 +39,53 @@ export const userUpdateSchema = userSchema.partial().extend({
     .or(z.literal("")),
 });
 
+const optionalIp = z
+  .string()
+  .regex(
+    /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+    "Invalid IP address"
+  )
+  .optional()
+  .or(z.literal(""));
+
 export const vmSchema = z.object({
-  hostname: z.string().min(1, "Hostname is required").max(255),
+  vmId: z.string().optional(),
+  hostname: z.string().min(1, "FQDN / Hostname is required").max(255),
   vmName: z.string().min(1, "VM name is required").max(255),
   description: z.string().optional(),
   environment: z.nativeEnum(Environment),
   platform: z.nativeEnum(Platform),
-  ipAddress: z
-    .string()
-    .regex(
-      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-      "Invalid IP address"
-    )
-    .optional()
-    .or(z.literal("")),
+  useCase: z.string().optional(),
+  ipAddress: optionalIp,
   secondaryIp: z.string().optional(),
+  tertiaryIp: z.string().optional(),
+  sshPort: z.coerce.number().int().min(1).max(65535).optional().nullable(),
+  rdpPort: z.coerce.number().int().min(1).max(65535).optional().nullable(),
+  remoteAccessMethod: z.string().optional(),
+  dnsRecords: z.string().optional(),
+  vlan: z.string().optional(),
+  firewallZone: z.string().optional(),
   osType: z.string().optional(),
   osVersion: z.string().optional(),
+  kernelVersion: z.string().optional(),
+  installedServices: z.string().optional(),
   cpuCores: z.coerce.number().int().min(1).max(512),
   memoryGB: z.coerce.number().int().min(1).max(4096),
   storageGB: z.coerce.number().int().min(1).max(102400),
+  physicalHost: z.string().optional(),
+  datacenter: z.string().optional(),
+  diskType: z.string().optional(),
+  storageDatastore: z.string().optional(),
+  haEnabled: z.boolean(),
+  cluster: z.string().optional(),
+  backupPolicy: z.string().optional(),
+  backupType: z.string().optional(),
+  patchLevel: z.string().optional(),
+  antivirusInstalled: z.boolean(),
+  lastVulnerabilityScanDate: z.coerce.date().optional().nullable(),
+  cisStigHardening: z.boolean(),
+  encryptionAtRest: z.boolean(),
+  complianceTags: z.array(z.string()),
   owner: z.string().optional(),
   department: z.string().optional(),
   businessUnit: z.string().optional(),
@@ -70,12 +97,11 @@ export const vmSchema = z.object({
   monitoringEnabled: z.boolean(),
   patchGroup: z.string().optional(),
   location: z.string().optional(),
-  datacenter: z.string().optional(),
-  cluster: z.string().optional(),
   resourcePool: z.string().optional(),
   costCenter: z.string().optional(),
   tags: z.array(z.string()),
   notes: z.string().optional(),
+  createdBy: z.string().optional(),
   lastPatchDate: z.coerce.date().optional().nullable(),
   endOfLifeDate: z.coerce.date().optional().nullable(),
 });
@@ -118,6 +144,8 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
   AWS: "AWS EC2",
   AZURE: "Azure VMs",
   GCP: "Google Cloud",
+  PROXMOX: "Proxmox",
+  OPENSTACK: "OpenStack",
   OTHER: "Other",
 };
 
@@ -141,3 +169,21 @@ export const POWER_STATE_LABELS: Record<PowerState, string> = {
   OFF: "Off",
   SUSPENDED: "Suspended",
 };
+
+export const DISK_TYPE_OPTIONS = ["Thin", "Thick"] as const;
+
+export const BACKUP_TYPE_OPTIONS = [
+  "Full",
+  "Incremental",
+  "Differential",
+  "Snapshot",
+  "Other",
+] as const;
+
+export const REMOTE_ACCESS_OPTIONS = ["SSH", "RDP", "VPN", "Console", "Bastion", "Other"] as const;
+
+export function resolveLoginEmail(username: string): string {
+  const trimmed = username.trim().toLowerCase();
+  if (trimmed.includes("@")) return trimmed;
+  return `${trimmed}@ahg.local`;
+}

@@ -11,7 +11,7 @@ export default withAuth(
     const role = token?.role;
     const path = req.nextUrl.pathname;
 
-    if (path.startsWith("/users") || path.startsWith("/audit-logs") || path.startsWith("/settings")) {
+    if (path.startsWith("/users") || path.startsWith("/audit-logs")) {
       if (role !== "ADMIN") {
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
@@ -43,7 +43,6 @@ export const config = {
     "/reports/:path*",
     "/imports/:path*",
     "/users/:path*",
-    "/settings/:path*",
     "/profile/:path*",
     "/audit-logs/:path*",
     "/notifications/:path*",

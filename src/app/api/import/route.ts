@@ -10,14 +10,8 @@ import {
 } from "@/lib/api-utils";
 import { requirePermission } from "@/lib/session";
 import { importRowSchema } from "@/lib/validations";
+import { toVMCreateData } from "@/lib/vm-data";
 import { logImport } from "@/lib/audit";
-import {
-  Criticality,
-  Environment,
-  Platform,
-  PowerState,
-  VMStatus,
-} from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,39 +79,7 @@ export async function POST(request: NextRequest) {
         }
 
         await prisma.virtualMachine.create({
-          data: {
-            hostname: data.hostname,
-            vmName: data.vmName,
-            description: data.description,
-            environment: (data.environment as Environment) || Environment.DEV,
-            platform: (data.platform as Platform) || Platform.OTHER,
-            ipAddress: data.ipAddress || null,
-            secondaryIp: data.secondaryIp,
-            osType: data.osType,
-            osVersion: data.osVersion,
-            cpuCores: data.cpuCores ?? 1,
-            memoryGB: data.memoryGB ?? 4,
-            storageGB: data.storageGB ?? 50,
-            owner: data.owner,
-            department: data.department,
-            businessUnit: data.businessUnit,
-            application: data.application,
-            criticality: (data.criticality as Criticality) || Criticality.MEDIUM,
-            status: (data.status as VMStatus) || VMStatus.PENDING,
-            powerState: (data.powerState as PowerState) || PowerState.OFF,
-            backupEnabled: data.backupEnabled ?? false,
-            monitoringEnabled: data.monitoringEnabled ?? false,
-            patchGroup: data.patchGroup,
-            location: data.location,
-            datacenter: data.datacenter,
-            cluster: data.cluster,
-            resourcePool: data.resourcePool,
-            costCenter: data.costCenter,
-            tags: data.tags ?? [],
-            notes: data.notes,
-            lastPatchDate: data.lastPatchDate,
-            endOfLifeDate: data.endOfLifeDate,
-          },
+          data: toVMCreateData(data, session.user.name ?? undefined),
         });
         successful++;
       } catch (err) {
@@ -159,13 +121,22 @@ function normalizeImportRow(row: Record<string, string>) {
     const v = value?.trim();
     if (!v) continue;
 
-    if (["cpuCores", "memoryGB", "storageGB"].includes(k)) {
+    if (["cpuCores", "memoryGB", "storageGB", "sshPort", "rdpPort"].includes(k)) {
       result[k] = parseInt(v, 10);
-    } else if (["backupEnabled", "monitoringEnabled"].includes(k)) {
+    } else if (
+      [
+        "backupEnabled",
+        "monitoringEnabled",
+        "haEnabled",
+        "antivirusInstalled",
+        "cisStigHardening",
+        "encryptionAtRest",
+      ].includes(k)
+    ) {
       result[k] = v.toLowerCase() === "true" || v === "1" || v.toLowerCase() === "yes";
-    } else if (k === "tags") {
+    } else if (k === "tags" || k === "complianceTags") {
       result[k] = v.split(";").map((t) => t.trim()).filter(Boolean);
-    } else if (["lastPatchDate", "endOfLifeDate"].includes(k)) {
+    } else if (["lastPatchDate", "endOfLifeDate", "lastVulnerabilityScanDate"].includes(k)) {
       result[k] = new Date(v);
     } else {
       result[k] = v;

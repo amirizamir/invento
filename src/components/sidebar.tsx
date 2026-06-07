@@ -9,7 +9,6 @@ import {
   FileBarChart,
   Upload,
   Users,
-  Settings,
   ScrollText,
   Bell,
   ChevronLeft,
@@ -29,7 +28,6 @@ const navItems = [
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/users", label: "Users", icon: Users, roles: ["ADMIN"] as Role[] },
   { href: "/audit-logs", label: "Audit Logs", icon: ScrollText, roles: ["ADMIN"] as Role[] },
-  { href: "/settings", label: "Settings", icon: Settings, roles: ["ADMIN"] as Role[] },
 ];
 
 export function Sidebar() {
@@ -53,8 +51,8 @@ export function Sidebar() {
         <HardDrive className="h-6 w-6 shrink-0 text-sidebar-primary" />
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="font-semibold text-sm truncate">VM Inventory</p>
-            <p className="text-xs text-sidebar-foreground/70 truncate">Manager</p>
+            <p className="font-semibold text-lg truncate">AHG</p>
+            <p className="text-xs text-sidebar-foreground/70 truncate">VM Inventory</p>
           </div>
         )}
       </div>

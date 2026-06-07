@@ -10,6 +10,7 @@ import {
 import { requirePermission } from "@/lib/session";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { vmQuerySchema } from "@/lib/validations";
+import { toVMCreateData } from "@/lib/vm-data";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,7 +31,9 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { hostname: { contains: query.search, mode: "insensitive" } },
         { vmName: { contains: query.search, mode: "insensitive" } },
+        { vmId: { contains: query.search, mode: "insensitive" } },
         { ipAddress: { contains: query.search, mode: "insensitive" } },
+        { physicalHost: { contains: query.search, mode: "insensitive" } },
         { owner: { contains: query.search, mode: "insensitive" } },
         { department: { contains: query.search, mode: "insensitive" } },
         { application: { contains: query.search, mode: "insensitive" } },
@@ -78,10 +81,7 @@ export async function POST(request: NextRequest) {
     const data = vmSchema.parse(body);
 
     const vm = await prisma.virtualMachine.create({
-      data: {
-        ...data,
-        ipAddress: data.ipAddress || null,
-      },
+      data: toVMCreateData(data, session.user.name ?? undefined),
     });
 
     await logVMCreate(session.user.id, vm, vm.id);

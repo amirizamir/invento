@@ -29,13 +29,13 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const result = await signIn("credentials", {
-        email: data.email,
+        username: data.username,
         password: data.password,
         redirect: false,
       });
 
       if (result?.error) {
-        toast({ title: "Login failed", description: "Invalid email or password", variant: "destructive" });
+        toast({ title: "Login failed", description: "Invalid username or password", variant: "destructive" });
         return;
       }
 
@@ -55,19 +55,19 @@ export default function LoginPage() {
               <HardDrive className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">VM Inventory Manager</CardTitle>
-          <CardDescription>Sign in to your enterprise account</CardDescription>
+          <CardTitle className="text-2xl">AHG</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="admin@vminventory.local" {...register("email")} />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" type="text" placeholder="zamir.amiri" autoComplete="username" {...register("username")} />
+              {errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" {...register("password")} />
+              <Input id="password" type="password" placeholder="••••••••" autoComplete="current-password" {...register("password")} />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
@@ -75,9 +75,6 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Demo: admin@vminventory.local / Password123!
-          </p>
         </CardContent>
       </Card>
     </div>

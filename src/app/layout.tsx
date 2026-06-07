@@ -6,7 +6,7 @@ import { Providers } from "@/components/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "VM Inventory Manager",
+  title: "AHG",
   description: "Enterprise VM inventory, lifecycle, and governance platform",
 };
 
