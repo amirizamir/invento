@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import {
   LayoutDashboard,
   Server,
+  Cpu,
   FileBarChart,
   Upload,
   Users,
@@ -23,6 +24,7 @@ import { Role } from "@prisma/client";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vms", label: "VM Inventory", icon: Server },
+  { href: "/hardware", label: "Hardware", icon: Cpu },
   { href: "/reports", label: "Reports", icon: FileBarChart },
   { href: "/imports", label: "Imports", icon: Upload, roles: ["ADMIN", "OPERATOR"] as Role[] },
   { href: "/notifications", label: "Notifications", icon: Bell },

@@ -17,9 +17,9 @@ export default withAuth(
       }
     }
 
-    if (path.startsWith("/vms/new") || path.startsWith("/imports")) {
+    if (path.startsWith("/vms/new") || path.startsWith("/hardware/new") || path.startsWith("/imports")) {
       if (role === "VIEWER") {
-        return NextResponse.redirect(new URL("/vms", req.url));
+        return NextResponse.redirect(new URL(path.startsWith("/hardware") ? "/hardware" : "/vms", req.url));
       }
     }
 
@@ -40,6 +40,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/vms/:path*",
+    "/hardware/:path*",
     "/reports/:path*",
     "/imports/:path*",
     "/users/:path*",

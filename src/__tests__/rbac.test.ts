@@ -12,7 +12,9 @@ describe("RBAC", () => {
 
   it("restricts operator permissions", () => {
     expect(hasPermission(Role.OPERATOR, "vm:create")).toBe(true);
+    expect(hasPermission(Role.OPERATOR, "hardware:create")).toBe(true);
     expect(hasPermission(Role.OPERATOR, "vm:delete")).toBe(false);
+    expect(hasPermission(Role.OPERATOR, "hardware:delete")).toBe(false);
     expect(hasPermission(Role.OPERATOR, "user:create")).toBe(false);
     expect(canModifyVMs(Role.OPERATOR)).toBe(true);
     expect(canManageUsers(Role.OPERATOR)).toBe(false);
@@ -20,7 +22,9 @@ describe("RBAC", () => {
 
   it("restricts viewer to read-only", () => {
     expect(hasPermission(Role.VIEWER, "vm:read")).toBe(true);
+    expect(hasPermission(Role.VIEWER, "hardware:read")).toBe(true);
     expect(hasPermission(Role.VIEWER, "vm:create")).toBe(false);
+    expect(hasPermission(Role.VIEWER, "hardware:create")).toBe(false);
     expect(hasPermission(Role.VIEWER, "vm:update")).toBe(false);
     expect(hasPermission(Role.VIEWER, "report:export")).toBe(true);
     expect(canModifyVMs(Role.VIEWER)).toBe(false);

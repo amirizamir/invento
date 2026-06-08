@@ -69,6 +69,38 @@ enum NotificationType {
   SYSTEM_ALERT
   VM_CREATED
   VM_UPDATED
+  HARDWARE_CREATED
+  HARDWARE_UPDATED
+}
+
+enum HardwareCategory {
+  SERVER
+  SWITCH
+  ROUTER
+  FIREWALL
+  HSM
+  NAS
+  STORAGE
+  UPS
+  OTHER
+}
+
+enum HardwareManufacturer {
+  DELL
+  CISCO
+  SYNOLOGY
+  HPE
+  HP
+  JUNIPER
+  FORTINET
+  PALO_ALTO
+  THALES
+  IBM
+  LENOVO
+  SUPERMICRO
+  APC
+  NETAPP
+  OTHER
 }
 
 model User {
@@ -160,6 +192,74 @@ model VirtualMachine {
   @@index([owner])
   @@index([application])
   @@index([physicalHost])
+}
+
+model HardwareEquipment {
+  id                  String               @id @default(cuid())
+  assetId             String?
+  name                String
+  description         String?
+  category            HardwareCategory     @default(OTHER)
+  manufacturer        HardwareManufacturer @default(OTHER)
+  model               String?
+  serialNumber        String?
+  partNumber          String?
+  status              VMStatus             @default(PENDING)
+  criticality         Criticality          @default(MEDIUM)
+  environment         Environment          @default(PRODUCTION)
+  datacenter          String?
+  site                String?
+  room                String?
+  rack                String?
+  rackUnit            String?
+  location            String?
+  hostname            String?
+  managementIp        String?
+  macAddress          String?
+  vlan                String?
+  subnet              String?
+  cpuModel            String?
+  cpuCores            Int?
+  ramGB               Int?
+  storageGB           Int?
+  storageType         String?
+  portCount           Int?
+  firmwareVersion     String?
+  biosVersion         String?
+  osVersion           String?
+  formFactor          String?
+  powerSupplyWatts    Int?
+  purchaseDate        DateTime?
+  warrantyExpiry      DateTime?
+  supportContractEnd  DateTime?
+  vendor              String?
+  poNumber            String?
+  endOfLifeDate       DateTime?
+  lastMaintenanceDate DateTime?
+  owner               String?
+  department          String?
+  businessUnit        String?
+  costCenter          String?
+  monitoringEnabled   Boolean              @default(false)
+  encryptionCapable   Boolean              @default(false)
+  complianceTags      String[]             @default([])
+  tags                String[]             @default([])
+  notes               String?
+  createdBy           String?
+  createdDate         DateTime             @default(now())
+  updatedDate         DateTime             @updatedAt
+
+  @@index([assetId])
+  @@index([name])
+  @@index([category])
+  @@index([manufacturer])
+  @@index([serialNumber])
+  @@index([status])
+  @@index([criticality])
+  @@index([department])
+  @@index([owner])
+  @@index([managementIp])
+  @@index([hostname])
 }
 
 model AuditLog {

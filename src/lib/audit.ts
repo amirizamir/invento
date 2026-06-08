@@ -72,6 +72,42 @@ export async function logVMDelete(userId: string, vmId: string, oldValue: unknow
   });
 }
 
+export async function logHardwareCreate(userId: string, hardware: unknown, hardwareId: string) {
+  return createAuditLog({
+    action: "CREATE",
+    entityType: "HardwareEquipment",
+    entityId: hardwareId,
+    userId,
+    newValue: hardware,
+  });
+}
+
+export async function logHardwareUpdate(
+  userId: string,
+  hardwareId: string,
+  oldValue: unknown,
+  newValue: unknown
+) {
+  return createAuditLog({
+    action: "UPDATE",
+    entityType: "HardwareEquipment",
+    entityId: hardwareId,
+    userId,
+    oldValue,
+    newValue,
+  });
+}
+
+export async function logHardwareDelete(userId: string, hardwareId: string, oldValue: unknown) {
+  return createAuditLog({
+    action: "DELETE",
+    entityType: "HardwareEquipment",
+    entityId: hardwareId,
+    userId,
+    oldValue,
+  });
+}
+
 export async function logUserAction(
   action: string,
   userId: string,
