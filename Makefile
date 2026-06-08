@@ -39,7 +39,8 @@ ps:
 	docker compose ps -a
 
 reset:
-	docker compose down -v
+	docker compose down
+	rm -rf ./data
 	docker compose up -d --build
 
 seed:

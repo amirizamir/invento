@@ -26,7 +26,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ${POSTGRES_DATA_DIR:-./data}:/var/lib/postgresql/data
     healthcheck:
       test:
         [
@@ -137,10 +137,6 @@ services:
         condition: service_healthy
     networks:
       - backend
-
-volumes:
-  postgres_data:
-    name: vm-inventory-postgres-data
 
 networks:
   backend:

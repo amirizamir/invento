@@ -18,7 +18,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data_dev:/var/lib/postgresql/data
+      - ${POSTGRES_DATA_DIR:-./data}:/var/lib/postgresql/data
     healthcheck:
       test:
         [
@@ -63,8 +63,6 @@ services:
       - backend
 
 volumes:
-  postgres_data_dev:
-    name: vm-inventory-postgres-data-dev
   node_modules_dev:
     name: vm-inventory-node-modules-dev
   next_cache_dev:
