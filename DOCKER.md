@@ -18,19 +18,7 @@ docker compose version
 ```bash
 cd invento
 cp .env.example .env
-nano .env    # set NEXTAUTH_URL to http://YOUR_SERVER_IP:3000
-```
-
-Or use the deploy script:
-
-```bash
-chmod +x deploy.sh
-./deploy.sh
-```
-
-Manual deploy:
-
-```bash
+nano .env    # set NEXTAUTH_URL, POSTGRES_PASSWORD, ADMIN_PASSWORD
 docker compose up -d --build
 ```
 
@@ -65,7 +53,7 @@ Everything is built from the **Dockerfile** — no host dependencies.
 | BOOTSTRAP_ADMIN   | No       | `true` — create admin if no users exist  |
 | POSTGRES_DATA_DIR | No       | DB files on host (default `./data`)      |
 
-After editing passwords, `deploy.sh` syncs `DATABASE_URL` automatically.
+`DATABASE_URL` is built automatically inside containers from `POSTGRES_*` variables (passwords with special characters are handled).
 
 ---
 

@@ -4,5 +4,4 @@ set -e
 . /app/scripts/build-database-url.sh
 build_database_url
 
-echo "Starting AHG (production)..."
-exec node server.js
+exec npx prisma studio --hostname 0.0.0.0 --port 5555 --browser none

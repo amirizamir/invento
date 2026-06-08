@@ -42,13 +42,14 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-minimum-32-characters-long}
-      NODE_ENV: development
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vm_inventory}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-minimum-32-characters-long}
+      NODE_ENV: development
       BOOTSTRAP_ADMIN: ${BOOTSTRAP_ADMIN:-true}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-zamir.amiri}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}

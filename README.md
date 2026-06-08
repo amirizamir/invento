@@ -176,9 +176,13 @@ npm run test:coverage
 
 | Variable          | Description                    |
 |-------------------|--------------------------------|
-| DATABASE_URL      | PostgreSQL connection string   |
+| POSTGRES_USER     | Database username              |
+| POSTGRES_PASSWORD | Database password              |
+| POSTGRES_DB       | Database name                  |
 | NEXTAUTH_URL      | Application URL                |
 | NEXTAUTH_SECRET   | Session encryption secret      |
+| ADMIN_USERNAME    | First admin username           |
+| ADMIN_PASSWORD    | First admin password           |
 
 ## License
 

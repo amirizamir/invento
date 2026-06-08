@@ -45,8 +45,8 @@ RUN apt-get update \
 COPY --from=prisma /app/node_modules ./node_modules
 COPY package.json ./
 COPY prisma ./prisma
-COPY scripts/wait-for-postgres.sh scripts/migrate.sh ./scripts/
-RUN chmod +x ./scripts/wait-for-postgres.sh ./scripts/migrate.sh
+COPY scripts/wait-for-postgres.sh scripts/migrate.sh scripts/build-database-url.sh ./scripts/
+RUN chmod +x ./scripts/wait-for-postgres.sh ./scripts/migrate.sh ./scripts/build-database-url.sh
 CMD ["sh", "./scripts/migrate.sh"]
 
 # --- Production runtime ---
@@ -69,8 +69,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
-COPY scripts/docker-entrypoint.sh ./scripts/
-RUN chmod +x ./scripts/docker-entrypoint.sh
+COPY scripts/docker-entrypoint.sh scripts/build-database-url.sh ./scripts/
+RUN chmod +x ./scripts/docker-entrypoint.sh ./scripts/build-database-url.sh
 
 USER nextjs
 EXPOSE 3000
@@ -88,7 +88,7 @@ RUN apt-get update \
 COPY --from=prisma /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public \
-  && chmod +x ./scripts/wait-for-postgres.sh ./scripts/migrate.sh
+  && chmod +x ./scripts/wait-for-postgres.sh ./scripts/migrate.sh ./scripts/build-database-url.sh
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 EXPOSE 3000
@@ -110,8 +110,10 @@ RUN apt-get update \
 COPY --from=prisma /app/node_modules ./node_modules
 COPY package.json ./
 COPY prisma ./prisma
+COPY scripts/studio-entrypoint.sh scripts/build-database-url.sh ./scripts/
+RUN chmod +x ./scripts/studio-entrypoint.sh ./scripts/build-database-url.sh
 EXPOSE 5555
-CMD ["npx", "prisma", "studio", "--hostname", "0.0.0.0", "--port", "5555", "--browser", "none"]
+ENTRYPOINT ["sh", "./scripts/studio-entrypoint.sh"]
 
 # --- Lint ---
 FROM base AS lint

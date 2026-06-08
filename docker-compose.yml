@@ -1,14 +1,10 @@
 # =============================================================================
-# VM Inventory Manager — Production stack (Linux / Docker only)
+# AHG — Production stack (Linux / Docker only)
 #
 # Quick start:
 #   cp .env.example .env
-#   nano .env                          # set NEXTAUTH_URL + passwords
+#   nano .env
 #   docker compose up -d --build
-#
-# Optional:
-#   docker compose --profile tools up -d studio   # Prisma Studio :5555
-#   docker compose --profile tools run --rm test  # run tests
 # =============================================================================
 
 name: vm-inventory
@@ -49,10 +45,11 @@ services:
     restart: "no"
     env_file: .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vm_inventory}
       BOOTSTRAP_ADMIN: ${BOOTSTRAP_ADMIN:-true}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-zamir.amiri}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
@@ -79,7 +76,11 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vm_inventory}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-generate-a-random-32-char-secret}
       NODE_ENV: production
@@ -99,7 +100,6 @@ services:
     networks:
       - backend
 
-  # --- Optional: docker compose --profile tools ... ---
   test:
     profiles: [tools]
     build:
@@ -108,7 +108,11 @@ services:
       target: test
     env_file: .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vm_inventory}
     depends_on:
       postgres:
         condition: service_healthy
@@ -136,7 +140,11 @@ services:
     ports:
       - "${STUDIO_PORT:-5555}:5555"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vm_inventory}?schema=public
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vm_inventory}
     depends_on:
       postgres:
         condition: service_healthy
