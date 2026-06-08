@@ -155,6 +155,9 @@ model VirtualMachine {
   backupPolicy              String?
   backupType                String?
   patchLevel                String?
+  antivirusAgent            String?
+  siemAgent                 String?
+  monitoringStack           String?
   antivirusInstalled        Boolean      @default(false)
   lastVulnerabilityScanDate  DateTime?
   cisStigHardening          Boolean      @default(false)

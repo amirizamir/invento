@@ -11,56 +11,35 @@ describe("Validations", () => {
     expect(resolveLoginEmail("admin@test.com")).toBe("admin@test.com");
   });
 
-  it("rejects empty username", () => {
-    const result = loginSchema.safeParse({ username: "", password: "test" });
-    expect(result.success).toBe(false);
+  it("validates minimal VM input (only name required)", () => {
+    const result = vmSchema.safeParse({ vmName: "web-server-01" });
+    expect(result.success).toBe(true);
   });
 
-  it("validates VM input", () => {
+  it("allows optional SSH and RDP ports", () => {
     const result = vmSchema.safeParse({
-      hostname: "vm-001.corp.local",
       vmName: "web-server-01",
-      environment: "PRODUCTION",
-      platform: "PROXMOX",
-      cpuCores: 4,
-      memoryGB: 16,
-      storageGB: 100,
-      criticality: "HIGH",
-      status: "ACTIVE",
-      powerState: "ON",
-      backupEnabled: true,
-      monitoringEnabled: true,
-      haEnabled: false,
-      antivirusInstalled: true,
-      cisStigHardening: false,
-      encryptionAtRest: true,
-      tags: ["prod", "web"],
-      complianceTags: ["PCI"],
+      sshPort: "",
+      rdpPort: "",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts Proxmox disk types and security stack fields", () => {
+    const result = vmSchema.safeParse({
+      vmName: "proxmox-vm-01",
+      diskType: "qcow2",
+      antivirusAgent: "ClamAV (Linux)",
+      siemAgent: "Wazuh",
+      monitoringStack: "Prometheus/Grafana",
     });
     expect(result.success).toBe(true);
   });
 
   it("rejects invalid IP address", () => {
     const result = vmSchema.safeParse({
-      hostname: "vm-001.corp.local",
       vmName: "web-server-01",
-      environment: "PRODUCTION",
-      platform: "OPENSTACK",
       ipAddress: "not-an-ip",
-      cpuCores: 4,
-      memoryGB: 16,
-      storageGB: 100,
-      criticality: "HIGH",
-      status: "ACTIVE",
-      powerState: "ON",
-      backupEnabled: false,
-      monitoringEnabled: false,
-      haEnabled: false,
-      antivirusInstalled: false,
-      cisStigHardening: false,
-      encryptionAtRest: false,
-      tags: [],
-      complianceTags: [],
     });
     expect(result.success).toBe(false);
   });

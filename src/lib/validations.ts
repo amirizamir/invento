@@ -39,6 +39,8 @@ export const userUpdateSchema = userSchema.partial().extend({
     .or(z.literal("")),
 });
 
+const optionalString = z.string().optional().or(z.literal(""));
+
 const optionalIp = z
   .string()
   .regex(
@@ -48,62 +50,91 @@ const optionalIp = z
   .optional()
   .or(z.literal(""));
 
+const optionalInt = (min: number, max: number) =>
+  z.preprocess(
+    (val) => {
+      if (val === "" || val === null || val === undefined) return null;
+      const n = Number(val);
+      return Number.isNaN(n) ? null : n;
+    },
+    z.number().int().min(min).max(max).nullable().optional()
+  );
+
+const optionalBool = z.preprocess(
+  (val) => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    return val;
+  },
+  z.boolean().optional()
+);
+
+const optionalDate = z.preprocess(
+  (val) => {
+    if (val === "" || val === null || val === undefined) return null;
+    return val;
+  },
+  z.coerce.date().nullable().optional()
+);
+
 export const vmSchema = z.object({
-  vmId: z.string().optional(),
-  hostname: z.string().min(1, "FQDN / Hostname is required").max(255),
+  vmId: optionalString,
+  hostname: optionalString,
   vmName: z.string().min(1, "VM name is required").max(255),
-  description: z.string().optional(),
-  environment: z.nativeEnum(Environment),
-  platform: z.nativeEnum(Platform),
-  useCase: z.string().optional(),
+  description: optionalString,
+  environment: z.nativeEnum(Environment).optional(),
+  platform: z.nativeEnum(Platform).optional(),
+  useCase: optionalString,
   ipAddress: optionalIp,
-  secondaryIp: z.string().optional(),
-  tertiaryIp: z.string().optional(),
-  sshPort: z.coerce.number().int().min(1).max(65535).optional().nullable(),
-  rdpPort: z.coerce.number().int().min(1).max(65535).optional().nullable(),
-  remoteAccessMethod: z.string().optional(),
-  dnsRecords: z.string().optional(),
-  vlan: z.string().optional(),
-  firewallZone: z.string().optional(),
-  osType: z.string().optional(),
-  osVersion: z.string().optional(),
-  kernelVersion: z.string().optional(),
-  installedServices: z.string().optional(),
-  cpuCores: z.coerce.number().int().min(1).max(512),
-  memoryGB: z.coerce.number().int().min(1).max(4096),
-  storageGB: z.coerce.number().int().min(1).max(102400),
-  physicalHost: z.string().optional(),
-  datacenter: z.string().optional(),
-  diskType: z.string().optional(),
-  storageDatastore: z.string().optional(),
-  haEnabled: z.boolean(),
-  cluster: z.string().optional(),
-  backupPolicy: z.string().optional(),
-  backupType: z.string().optional(),
-  patchLevel: z.string().optional(),
-  antivirusInstalled: z.boolean(),
-  lastVulnerabilityScanDate: z.coerce.date().optional().nullable(),
-  cisStigHardening: z.boolean(),
-  encryptionAtRest: z.boolean(),
-  complianceTags: z.array(z.string()),
-  owner: z.string().optional(),
-  department: z.string().optional(),
-  businessUnit: z.string().optional(),
-  application: z.string().optional(),
-  criticality: z.nativeEnum(Criticality),
-  status: z.nativeEnum(VMStatus),
-  powerState: z.nativeEnum(PowerState),
-  backupEnabled: z.boolean(),
-  monitoringEnabled: z.boolean(),
-  patchGroup: z.string().optional(),
-  location: z.string().optional(),
-  resourcePool: z.string().optional(),
-  costCenter: z.string().optional(),
-  tags: z.array(z.string()),
-  notes: z.string().optional(),
-  createdBy: z.string().optional(),
-  lastPatchDate: z.coerce.date().optional().nullable(),
-  endOfLifeDate: z.coerce.date().optional().nullable(),
+  secondaryIp: optionalString,
+  tertiaryIp: optionalString,
+  sshPort: optionalInt(1, 65535),
+  rdpPort: optionalInt(1, 65535),
+  remoteAccessMethod: optionalString,
+  dnsRecords: optionalString,
+  vlan: optionalString,
+  firewallZone: optionalString,
+  osType: optionalString,
+  osVersion: optionalString,
+  kernelVersion: optionalString,
+  installedServices: optionalString,
+  cpuCores: optionalInt(1, 512),
+  memoryGB: optionalInt(1, 4096),
+  storageGB: optionalInt(1, 102400),
+  physicalHost: optionalString,
+  datacenter: optionalString,
+  diskType: optionalString,
+  storageDatastore: optionalString,
+  haEnabled: optionalBool,
+  cluster: optionalString,
+  backupPolicy: optionalString,
+  backupType: optionalString,
+  patchLevel: optionalString,
+  antivirusAgent: optionalString,
+  siemAgent: optionalString,
+  monitoringStack: optionalString,
+  antivirusInstalled: optionalBool,
+  lastVulnerabilityScanDate: optionalDate,
+  cisStigHardening: optionalBool,
+  encryptionAtRest: optionalBool,
+  complianceTags: z.array(z.string()).optional(),
+  owner: optionalString,
+  department: optionalString,
+  businessUnit: optionalString,
+  application: optionalString,
+  criticality: z.nativeEnum(Criticality).optional(),
+  status: z.nativeEnum(VMStatus).optional(),
+  powerState: z.nativeEnum(PowerState).optional(),
+  backupEnabled: optionalBool,
+  monitoringEnabled: optionalBool,
+  patchGroup: optionalString,
+  location: optionalString,
+  resourcePool: optionalString,
+  costCenter: optionalString,
+  tags: z.array(z.string()).optional(),
+  notes: optionalString,
+  createdBy: optionalString,
+  lastPatchDate: optionalDate,
+  endOfLifeDate: optionalDate,
 });
 
 export const vmQuerySchema = z.object({
@@ -121,7 +152,6 @@ export const vmQuerySchema = z.object({
 });
 
 export const importRowSchema = vmSchema.partial().extend({
-  hostname: z.string().min(1),
   vmName: z.string().min(1),
 });
 
@@ -170,7 +200,14 @@ export const POWER_STATE_LABELS: Record<PowerState, string> = {
   SUSPENDED: "Suspended",
 };
 
-export const DISK_TYPE_OPTIONS = ["Thin", "Thick"] as const;
+export const DISK_TYPE_OPTIONS = [
+  "Thin",
+  "Thick",
+  "RAW",
+  "qcow2",
+  "Ceph",
+  "Other",
+] as const;
 
 export const BACKUP_TYPE_OPTIONS = [
   "Full",
@@ -182,8 +219,23 @@ export const BACKUP_TYPE_OPTIONS = [
 
 export const REMOTE_ACCESS_OPTIONS = ["SSH", "RDP", "VPN", "Console", "Bastion", "Other"] as const;
 
+export const ANTIVIRUS_OPTIONS = [
+  "ClamAV (Linux)",
+  "ESET (Windows)",
+  "Not Applicable",
+  "Other",
+] as const;
+
+export const SIEM_OPTIONS = ["Wazuh", "Not Applicable", "Other"] as const;
+
+export const MONITORING_OPTIONS = ["Prometheus/Grafana", "Not Applicable", "Other"] as const;
+
 export function resolveLoginEmail(username: string): string {
   const trimmed = username.trim().toLowerCase();
   if (trimmed.includes("@")) return trimmed;
   return `${trimmed}@ahg.local`;
+}
+
+export function isAgentActive(value?: string | null): boolean {
+  return !!value && value !== "Not Applicable";
 }

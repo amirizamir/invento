@@ -129,6 +129,7 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
               <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
               <TabsTrigger value="backup">Backup & DR</TabsTrigger>
               <TabsTrigger value="security">Patching & Security</TabsTrigger>
+              <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
               <TabsTrigger value="ownership">Ownership</TabsTrigger>
               <TabsTrigger value="audit">Audit Timeline</TabsTrigger>
             </TabsList>
@@ -196,11 +197,18 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
               <DetailCard title="Patching & Security" items={[
                 ["Patch Level", vm.patchLevel || "—"],
                 ["Last Patched Date", formatDate(vm.lastPatchDate)],
-                ["Antivirus / EDR Agent Installed", boolLabel(vm.antivirusInstalled)],
+                ["Antivirus / EDR", vm.antivirusAgent || "—"],
+                ["SIEM", vm.siemAgent || "—"],
                 ["Last Vulnerability Scan Date", formatDate(vm.lastVulnerabilityScanDate)],
                 ["CIS/STIG Hardening Applied", boolLabel(vm.cisStigHardening)],
                 ["Encryption at Rest", boolLabel(vm.encryptionAtRest)],
                 ["Compliance Tags", vm.complianceTags?.length ? vm.complianceTags.join(", ") : "—"],
+              ]} />
+            </TabsContent>
+
+            <TabsContent value="monitoring">
+              <DetailCard title="Monitoring & Observability" items={[
+                ["Monitoring Stack", vm.monitoringStack || "—"],
               ]} />
             </TabsContent>
 

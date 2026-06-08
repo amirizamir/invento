@@ -28,6 +28,9 @@ import {
   DISK_TYPE_OPTIONS,
   BACKUP_TYPE_OPTIONS,
   REMOTE_ACCESS_OPTIONS,
+  ANTIVIRUS_OPTIONS,
+  SIEM_OPTIONS,
+  MONITORING_OPTIONS,
 } from "@/lib/validations";
 import {
   Platform,
@@ -56,20 +59,6 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
   } = useForm<VMInput>({
     resolver: zodResolver(vmSchema) as Resolver<VMInput>,
     defaultValues: {
-      cpuCores: 2,
-      memoryGB: 8,
-      storageGB: 100,
-      environment: Environment.DEV,
-      platform: Platform.OTHER,
-      criticality: Criticality.MEDIUM,
-      status: VMStatus.PENDING,
-      powerState: PowerState.OFF,
-      backupEnabled: false,
-      monitoringEnabled: false,
-      haEnabled: false,
-      antivirusInstalled: false,
-      cisStigHardening: false,
-      encryptionAtRest: false,
       tags: [],
       complianceTags: [],
       ...defaultValues,
@@ -114,8 +103,8 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
           <Field label="VM Name *" error={errors.vmName?.message}><Input {...register("vmName")} /></Field>
           <Field label="Environment">
             <Controller name="environment" control={control} render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(ENVIRONMENT_LABELS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -128,8 +117,8 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
           <Field label="Use Case"><Input {...register("useCase")} /></Field>
           <Field label="Status">
             <Controller name="status" control={control} render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(VM_STATUS_LABELS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -151,9 +140,9 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
           <div className="md:col-span-2">
             <Field label="Installed Services"><Textarea {...register("installedServices")} rows={2} placeholder="Comma-separated or one per line" /></Field>
           </div>
-          <Field label="vCPU" error={errors.cpuCores?.message}><Input type="number" {...register("cpuCores")} /></Field>
-          <Field label="RAM (GB)" error={errors.memoryGB?.message}><Input type="number" {...register("memoryGB")} /></Field>
-          <Field label="HDD Size (GB)" error={errors.storageGB?.message}><Input type="number" {...register("storageGB")} /></Field>
+          <Field label="vCPU" error={errors.cpuCores?.message}><Input type="number" {...register("cpuCores")} placeholder="Optional" /></Field>
+          <Field label="RAM (GB)" error={errors.memoryGB?.message}><Input type="number" {...register("memoryGB")} placeholder="Optional" /></Field>
+          <Field label="HDD Size (GB)" error={errors.storageGB?.message}><Input type="number" {...register("storageGB")} placeholder="Optional" /></Field>
         </CardContent>
       </Card>
 
@@ -161,11 +150,11 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
         <CardHeader><CardTitle>Network & Access</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <Field label="IP Address" error={errors.ipAddress?.message}><Input {...register("ipAddress")} /></Field>
-          <Field label="FQDN / Hostname *" error={errors.hostname?.message}><Input {...register("hostname")} /></Field>
-          <Field label="Secondary IPs"><Input {...register("secondaryIp")} /></Field>
-          <Field label="Additional IP Address"><Input {...register("tertiaryIp")} /></Field>
-          <Field label="SSH Port" error={errors.sshPort?.message}><Input type="number" {...register("sshPort")} /></Field>
-          <Field label="RDP Port" error={errors.rdpPort?.message}><Input type="number" {...register("rdpPort")} /></Field>
+          <Field label="FQDN / Hostname" error={errors.hostname?.message}><Input {...register("hostname")} placeholder="Optional" /></Field>
+          <Field label="Secondary IPs"><Input {...register("secondaryIp")} placeholder="Optional" /></Field>
+          <Field label="Additional IP Address"><Input {...register("tertiaryIp")} placeholder="Optional" /></Field>
+          <Field label="SSH Port (optional)" error={errors.sshPort?.message}><Input type="number" {...register("sshPort")} placeholder="e.g. 22" /></Field>
+          <Field label="RDP Port (optional)" error={errors.rdpPort?.message}><Input type="number" {...register("rdpPort")} placeholder="e.g. 3389" /></Field>
           <Field label="Remote Access Method">
             <Controller name="remoteAccessMethod" control={control} render={({ field }) => (
               <Select value={field.value || ""} onValueChange={field.onChange}>
@@ -189,8 +178,8 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
         <CardContent className="grid gap-4 md:grid-cols-2">
           <Field label="Platform">
             <Controller name="platform" control={control} render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(PLATFORM_LABELS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -201,10 +190,10 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
           </Field>
           <Field label="Physical Host"><Input {...register("physicalHost")} /></Field>
           <Field label="Data Center"><Input {...register("datacenter")} /></Field>
-          <Field label="Disk Type (Thin/Thick)">
+          <Field label="Disk Type">
             <Controller name="diskType" control={control} render={({ field }) => (
               <Select value={field.value || ""} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue placeholder="Select disk type" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Thin, Thick, RAW, qcow2, Ceph..." /></SelectTrigger>
                 <SelectContent>
                   {DISK_TYPE_OPTIONS.map((option) => (
                     <SelectItem key={option} value={option}>{option}</SelectItem>
@@ -252,24 +241,42 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
       <Card>
         <CardHeader><CardTitle>Patching & Security</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <Field label="Patch Level"><Input {...register("patchLevel")} /></Field>
+          <Field label="Patch Level"><Input {...register("patchLevel")} placeholder="Optional" /></Field>
           <Field label="Last Patched Date"><Input type="date" {...register("lastPatchDate")} /></Field>
-          <div className="flex items-center gap-2">
-            <Controller name="antivirusInstalled" control={control} render={({ field }) => (
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+          <Field label="Antivirus / EDR">
+            <Controller name="antivirusAgent" control={control} render={({ field }) => (
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                <SelectContent>
+                  {ANTIVIRUS_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )} />
-            <Label>Antivirus / EDR Agent Installed</Label>
-          </div>
+          </Field>
+          <Field label="SIEM">
+            <Controller name="siemAgent" control={control} render={({ field }) => (
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                <SelectContent>
+                  {SIEM_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )} />
+          </Field>
           <Field label="Last Vulnerability Scan Date"><Input type="date" {...register("lastVulnerabilityScanDate")} /></Field>
           <div className="flex items-center gap-2">
             <Controller name="cisStigHardening" control={control} render={({ field }) => (
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              <Checkbox checked={!!field.value} onCheckedChange={field.onChange} />
             )} />
             <Label>CIS/STIG Hardening Applied</Label>
           </div>
           <div className="flex items-center gap-2">
             <Controller name="encryptionAtRest" control={control} render={({ field }) => (
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              <Checkbox checked={!!field.value} onCheckedChange={field.onChange} />
             )} />
             <Label>Encryption at Rest</Label>
           </div>
@@ -278,9 +285,27 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
             <Controller
               name="complianceTags"
               control={control}
-              render={({ field }) => <TagInput value={field.value} onChange={field.onChange} placeholder="Add compliance tag..." />}
+              render={({ field }) => <TagInput value={field.value ?? []} onChange={field.onChange} placeholder="Optional" />}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Monitoring & Observability</CardTitle></CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <Field label="Monitoring Stack">
+            <Controller name="monitoringStack" control={control} render={({ field }) => (
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                <SelectContent>
+                  {MONITORING_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )} />
+          </Field>
         </CardContent>
       </Card>
 
@@ -289,8 +314,8 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
         <CardContent className="grid gap-4 md:grid-cols-2">
           <Field label="Criticality">
             <Controller name="criticality" control={control} render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(CRITICALITY_LABELS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>

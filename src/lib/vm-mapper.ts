@@ -33,6 +33,9 @@ type VMRecord = {
   backupPolicy?: string | null;
   backupType?: string | null;
   patchLevel?: string | null;
+  antivirusAgent?: string | null;
+  siemAgent?: string | null;
+  monitoringStack?: string | null;
   antivirusInstalled: boolean;
   lastVulnerabilityScanDate?: string | Date | null;
   cisStigHardening: boolean;
@@ -92,6 +95,9 @@ export function toVMFormValues(vm: VMRecord): VMInput {
     backupPolicy: vm.backupPolicy ?? undefined,
     backupType: vm.backupType ?? undefined,
     patchLevel: vm.patchLevel ?? undefined,
+    antivirusAgent: vm.antivirusAgent ?? undefined,
+    siemAgent: vm.siemAgent ?? undefined,
+    monitoringStack: vm.monitoringStack ?? undefined,
     antivirusInstalled: vm.antivirusInstalled,
     lastVulnerabilityScanDate: vm.lastVulnerabilityScanDate
       ? new Date(vm.lastVulnerabilityScanDate)

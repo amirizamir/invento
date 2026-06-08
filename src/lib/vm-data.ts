@@ -1,4 +1,5 @@
 import type { VMInput } from "@/lib/validations";
+import { isAgentActive } from "@/lib/validations";
 import {
   Criticality,
   Environment,
@@ -26,19 +27,41 @@ const VM_CREATE_DEFAULTS = {
   complianceTags: [] as string[],
 };
 
-export function toVMCreateData(data: Partial<VMInput>, createdBy?: string) {
+function normalizeVmFields(data: Partial<VMInput>) {
   const merged = { ...VM_CREATE_DEFAULTS, ...data };
 
   return {
     ...merged,
+    hostname: merged.hostname?.trim() || merged.vmName?.trim() || "—",
     ipAddress: merged.ipAddress || null,
-    createdBy: createdBy ?? merged.createdBy ?? null,
+    sshPort: merged.sshPort ?? null,
+    rdpPort: merged.rdpPort ?? null,
+    cpuCores: merged.cpuCores ?? 1,
+    memoryGB: merged.memoryGB ?? 4,
+    storageGB: merged.storageGB ?? 50,
+    tags: merged.tags ?? [],
+    complianceTags: merged.complianceTags ?? [],
+    antivirusAgent: merged.antivirusAgent?.trim() || null,
+    siemAgent: merged.siemAgent?.trim() || null,
+    monitoringStack: merged.monitoringStack?.trim() || null,
+    antivirusInstalled: isAgentActive(merged.antivirusAgent) || merged.antivirusInstalled === true,
+    monitoringEnabled: isAgentActive(merged.monitoringStack) || merged.monitoringEnabled === true,
+    haEnabled: merged.haEnabled ?? false,
+    backupEnabled: merged.backupEnabled ?? false,
+    cisStigHardening: merged.cisStigHardening ?? false,
+    encryptionAtRest: merged.encryptionAtRest ?? false,
+  };
+}
+
+export function toVMCreateData(data: Partial<VMInput>, createdBy?: string) {
+  const normalized = normalizeVmFields(data);
+
+  return {
+    ...normalized,
+    createdBy: createdBy ?? normalized.createdBy ?? null,
   };
 }
 
 export function toVMUpdateData(data: VMInput) {
-  return {
-    ...data,
-    ipAddress: data.ipAddress || null,
-  };
+  return normalizeVmFields(data);
 }
