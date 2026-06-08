@@ -49,7 +49,12 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      SEED_DATABASE: ${SEED_DATABASE:-true}
+      BOOTSTRAP_ADMIN: ${BOOTSTRAP_ADMIN:-true}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-zamir.amiri}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_NAME: ${ADMIN_NAME:-Zamir Amiri}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_DEPARTMENT: ${ADMIN_DEPARTMENT:-IT Infrastructure}
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
     volumes:

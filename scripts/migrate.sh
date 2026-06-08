@@ -6,11 +6,11 @@ set -e
 echo "Applying database schema..."
 npx prisma db push --accept-data-loss
 
-if [ "${SEED_DATABASE:-true}" = "true" ]; then
-  echo "Seeding database..."
+if [ "${BOOTSTRAP_ADMIN:-true}" = "true" ]; then
+  echo "Running admin bootstrap (skipped if users already exist)..."
   npx prisma db seed
 else
-  echo "Skipping seed (SEED_DATABASE=${SEED_DATABASE})."
+  echo "Skipping admin bootstrap (BOOTSTRAP_ADMIN=${BOOTSTRAP_ADMIN})."
 fi
 
 echo "Database initialization complete."

@@ -9,7 +9,7 @@ help:
 	@echo "  make logs      Tail app logs"
 	@echo "  make ps        Container status"
 	@echo "  make reset     Stop and remove volumes, redeploy"
-	@echo "  make seed      Re-run DB init + seed"
+	@echo "  make bootstrap Re-run DB schema + admin bootstrap"
 	@echo "  make test      Run tests in Docker"
 	@echo "  make lint      Run ESLint in Docker"
 	@echo "  make studio    Start Prisma Studio"
@@ -43,7 +43,7 @@ reset:
 	rm -rf ./data
 	docker compose up -d --build
 
-seed:
+bootstrap:
 	docker compose run --rm init-db
 
 test:

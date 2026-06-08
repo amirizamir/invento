@@ -26,6 +26,8 @@ if [ ! -f .env ]; then
   echo "  - NEXTAUTH_URL=http://YOUR_SERVER_IP:${APP_PORT:-3000}"
   echo "  - POSTGRES_PASSWORD=strong-password"
   echo "  - NEXTAUTH_SECRET=random-32+-char-string"
+  echo "  - ADMIN_USERNAME=zamir.amiri"
+  echo "  - ADMIN_PASSWORD=strong-admin-password"
   echo ""
 fi
 
@@ -48,13 +50,14 @@ done
 
 APP_PORT_VAL="$(grep -E '^APP_PORT=' .env | cut -d= -f2- || echo 3000)"
 NEXTAUTH_URL_VAL="$(grep -E '^NEXTAUTH_URL=' .env | cut -d= -f2- || echo "http://localhost:${APP_PORT_VAL}")"
+ADMIN_USERNAME_VAL="$(grep -E '^ADMIN_USERNAME=' .env | cut -d= -f2- || echo zamir.amiri)"
 
 echo ""
 echo "============================================"
-echo " VM Inventory Manager is running"
+echo " AHG is running"
 echo " URL:      ${NEXTAUTH_URL_VAL}"
-echo " Login:    admin@vminventory.local"
-echo " Password: Password123!"
+echo " Login:    ${ADMIN_USERNAME_VAL}"
+echo " Password: (ADMIN_PASSWORD from .env)"
 echo "============================================"
 echo ""
 echo "Commands:"

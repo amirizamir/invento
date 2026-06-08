@@ -57,8 +57,8 @@ Open the URL from `NEXTAUTH_URL` in `.env`.
 | Deploy | `./deploy.sh` or `docker compose up -d --build` |
 | Logs | `docker compose logs -f app` |
 | Stop | `docker compose down` |
-| Reset DB | `docker compose down -v && docker compose up -d --build` |
-| Re-seed | `docker compose run --rm init-db` |
+| Reset DB | `rm -rf ./data && docker compose up -d --build` |
+| Re-run init | `docker compose run --rm init-db` |
 | Dev mode | `docker compose -f docker-compose.dev.yml up --build` |
 | Tests | `docker compose --profile tools run --rm test` |
 | Prisma Studio | `docker compose --profile tools up -d studio` |
@@ -83,17 +83,20 @@ npm install
 cp .env.example .env
 docker compose up postgres -d   # DB only
 npm run db:push
-npm run db:seed
+npm run db:seed   # creates admin only if no users exist (set ADMIN_PASSWORD in .env)
 npm run dev
 ```
 
-## Default Credentials
+## First Deploy Credentials
 
-| Role     | Email                      | Password       |
-|----------|----------------------------|----------------|
-| Admin    | admin@vminventory.local    | Password123!   |
-| Operator | operator@vminventory.local | Password123! |
-| Viewer   | viewer@vminventory.local   | Password123!   |
+Set in `.env` before first deploy:
+
+| Variable | Example |
+|----------|---------|
+| ADMIN_USERNAME | `zamir.amiri` |
+| ADMIN_PASSWORD | your secure password |
+
+Login with the username above (or full email if `ADMIN_EMAIL` is set). No sample VMs or demo users are created.
 
 ## Project Structure
 
@@ -114,7 +117,7 @@ src/
 └── __tests__/            # Unit & component tests
 prisma/
 ├── schema.prisma         # Database schema
-└── seed.ts               # Seed script (100 VMs, 3 users)
+└── seed.ts               # Admin bootstrap only (no dummy data)
 ```
 
 ## API Endpoints

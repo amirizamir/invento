@@ -36,7 +36,7 @@ docker compose up -d --build
 
 Open the URL from `NEXTAUTH_URL` in `.env`.
 
-**Default login:** `admin@vminventory.local` / `Password123!`
+**First login:** use `ADMIN_USERNAME` and `ADMIN_PASSWORD` from `.env` (no dummy data is created).
 
 ---
 
@@ -45,7 +45,7 @@ Open the URL from `NEXTAUTH_URL` in `.env`.
 | Service   | Container            | Port  | Role                          |
 |-----------|----------------------|-------|-------------------------------|
 | postgres  | vm-inventory-db      | 5432  | PostgreSQL database           |
-| init-db   | vm-inventory-init-db | —     | Schema + seed (runs once)     |
+| init-db   | vm-inventory-init-db | —     | Schema + admin bootstrap (runs once) |
 | app       | vm-inventory-app     | 3000  | Next.js production server     |
 
 Everything is built from the **Dockerfile** — no host dependencies.
@@ -59,8 +59,11 @@ Everything is built from the **Dockerfile** — no host dependencies.
 | NEXTAUTH_URL      | Yes      | Public URL, e.g. `http://10.0.0.5:3000`  |
 | NEXTAUTH_SECRET   | Yes      | Random string, 32+ characters            |
 | POSTGRES_PASSWORD | Yes      | Database password                        |
+| ADMIN_USERNAME    | Yes      | First admin username (e.g. zamir.amiri)  |
+| ADMIN_PASSWORD    | Yes      | First admin password                     |
 | APP_PORT          | No       | Host port (default 3000)                 |
-| SEED_DATABASE     | No       | `true` on first deploy                   |
+| BOOTSTRAP_ADMIN   | No       | `true` — create admin if no users exist  |
+| POSTGRES_DATA_DIR | No       | DB files on host (default `./data`)      |
 
 After editing passwords, `deploy.sh` syncs `DATABASE_URL` automatically.
 
@@ -78,14 +81,14 @@ docker compose logs -f app
 # Restart after config change
 docker compose up -d --build
 
-# Re-seed database (keeps volume)
+# Re-run schema + admin bootstrap (safe if users already exist)
 docker compose run --rm init-db
 
 # Stop
 docker compose down
 
-# Full reset (deletes all VM data)
-docker compose down -v
+# Full reset (deletes all data)
+rm -rf ./data
 docker compose up -d --build
 ```
 
