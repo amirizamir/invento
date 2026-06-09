@@ -29,6 +29,7 @@ import {
   VM_STATUS_LABELS,
   CRITICALITY_LABELS,
   ENVIRONMENT_LABELS,
+  POWER_STATE_LABELS,
 } from "@/lib/validations";
 import {
   HardwareCategory,
@@ -103,8 +104,8 @@ export function HardwareForm({ defaultValues, onSubmit, loading, submitLabel = "
           <Field label="Part Number"><Input {...register("partNumber")} /></Field>
           <Field label="Status">
             <Controller name="status" control={control} render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(VM_STATUS_LABELS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -113,6 +114,19 @@ export function HardwareForm({ defaultValues, onSubmit, loading, submitLabel = "
               </Select>
             )} />
           </Field>
+          <Field label="Power State">
+            <Controller name="powerState" control={control} render={({ field }) => (
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(POWER_STATE_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )} />
+          </Field>
+          <Field label="Owner"><Input {...register("owner")} placeholder="Optional" /></Field>
           <div className="md:col-span-2">
             <Field label="Description"><Textarea {...register("description")} rows={2} /></Field>
           </div>
@@ -221,8 +235,7 @@ export function HardwareForm({ defaultValues, onSubmit, loading, submitLabel = "
               </Select>
             )} />
           </Field>
-          <Field label="Owner"><Input {...register("owner")} /></Field>
-          <Field label="Department"><Input {...register("department")} /></Field>
+          <Field label="Department"><Input {...register("department")} placeholder="Optional" /></Field>
           <Field label="Business Unit"><Input {...register("businessUnit")} /></Field>
           <Field label="Cost Center"><Input {...register("costCenter")} /></Field>
           <Field label="Created By"><Input {...register("createdBy")} readOnly className="bg-muted" /></Field>

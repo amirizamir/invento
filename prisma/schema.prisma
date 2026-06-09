@@ -208,6 +208,7 @@ model HardwareEquipment {
   serialNumber        String?
   partNumber          String?
   status              VMStatus             @default(PENDING)
+  powerState          PowerState           @default(OFF)
   criticality         Criticality          @default(MEDIUM)
   environment         Environment          @default(PRODUCTION)
   datacenter          String?

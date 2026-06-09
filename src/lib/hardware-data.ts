@@ -4,6 +4,7 @@ import {
   Environment,
   HardwareCategory,
   HardwareManufacturer,
+  PowerState,
   VMStatus,
 } from "@prisma/client";
 
@@ -11,6 +12,7 @@ const HARDWARE_CREATE_DEFAULTS = {
   category: HardwareCategory.OTHER,
   manufacturer: HardwareManufacturer.OTHER,
   status: VMStatus.PENDING,
+  powerState: PowerState.OFF,
   criticality: Criticality.MEDIUM,
   environment: Environment.PRODUCTION,
   monitoringEnabled: false,

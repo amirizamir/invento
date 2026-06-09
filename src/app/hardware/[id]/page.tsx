@@ -18,7 +18,7 @@ import {
   HARDWARE_MANUFACTURER_LABELS,
 } from "@/lib/hardware-validations";
 import type { HardwareInput } from "@/lib/hardware-validations";
-import { VM_STATUS_LABELS, CRITICALITY_LABELS, ENVIRONMENT_LABELS } from "@/lib/validations";
+import { VM_STATUS_LABELS, CRITICALITY_LABELS, ENVIRONMENT_LABELS, POWER_STATE_LABELS } from "@/lib/validations";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { canModifyHardware } from "@/lib/rbac";
 import { toHardwareFormValues } from "@/lib/hardware-mapper";
@@ -139,6 +139,7 @@ export default function HardwareDetailPage({ params }: { params: Promise<{ id: s
                 ["Serial Number", hw.serialNumber || "—"],
                 ["Part Number", hw.partNumber || "—"],
                 ["Status", VM_STATUS_LABELS[hw.status]],
+                ["Power State", POWER_STATE_LABELS[hw.powerState]],
                 ["Description", hw.description || "—"],
               ]} />
             </TabsContent>

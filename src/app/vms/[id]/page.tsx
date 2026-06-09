@@ -18,6 +18,7 @@ import {
   ENVIRONMENT_LABELS,
   VM_STATUS_LABELS,
   CRITICALITY_LABELS,
+  POWER_STATE_LABELS,
 } from "@/lib/validations";
 import type { VMInput } from "@/lib/validations";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -142,6 +143,7 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
                 ["Application Name", vm.application || "—"],
                 ["Use Case", vm.useCase || "—"],
                 ["Status", VM_STATUS_LABELS[vm.status]],
+                ["Power State", POWER_STATE_LABELS[vm.powerState]],
               ]} />
             </TabsContent>
 
@@ -215,6 +217,7 @@ export default function VMDetailPage({ params }: { params: Promise<{ id: string 
             <TabsContent value="ownership" className="space-y-4">
               <DetailCard title="Ownership & Criticality" items={[
                 ["Criticality", CRITICALITY_LABELS[vm.criticality]],
+                ["Owner", vm.owner || "—"],
                 ["Business Unit", vm.businessUnit || "—"],
                 ["Department", vm.department || "—"],
                 ["Created By", vm.createdBy || "—"],

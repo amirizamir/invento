@@ -4,6 +4,7 @@ import {
   Environment,
   HardwareCategory,
   HardwareManufacturer,
+  PowerState,
   VMStatus,
 } from "@prisma/client";
 
@@ -25,9 +26,10 @@ export const hardwareSchema = z.object({
   model: z.string().optional(),
   serialNumber: z.string().optional(),
   partNumber: z.string().optional(),
-  status: z.nativeEnum(VMStatus),
-  criticality: z.nativeEnum(Criticality),
-  environment: z.nativeEnum(Environment),
+  status: z.nativeEnum(VMStatus).optional(),
+  powerState: z.nativeEnum(PowerState).optional(),
+  criticality: z.nativeEnum(Criticality).optional(),
+  environment: z.nativeEnum(Environment).optional(),
   datacenter: z.string().optional(),
   site: z.string().optional(),
   room: z.string().optional(),

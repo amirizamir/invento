@@ -25,6 +25,7 @@ import {
   ENVIRONMENT_LABELS,
   VM_STATUS_LABELS,
   CRITICALITY_LABELS,
+  POWER_STATE_LABELS,
   DISK_TYPE_OPTIONS,
   BACKUP_TYPE_OPTIONS,
   REMOTE_ACCESS_OPTIONS,
@@ -121,6 +122,18 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
                 <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(VM_STATUS_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )} />
+          </Field>
+          <Field label="Power State">
+            <Controller name="powerState" control={control} render={({ field }) => (
+              <Select value={field.value || ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(POWER_STATE_LABELS).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
                   ))}
                 </SelectContent>
@@ -324,8 +337,9 @@ export function VMForm({ defaultValues, onSubmit, loading, submitLabel = "Save",
               </Select>
             )} />
           </Field>
-          <Field label="Business Unit / Department"><Input {...register("businessUnit")} /></Field>
-          <Field label="Department"><Input {...register("department")} /></Field>
+          <Field label="Owner"><Input {...register("owner")} placeholder="Optional" /></Field>
+          <Field label="Business Unit / Department"><Input {...register("businessUnit")} placeholder="Optional" /></Field>
+          <Field label="Department"><Input {...register("department")} placeholder="Optional" /></Field>
           <Field label="Created By"><Input {...register("createdBy")} readOnly className="bg-muted" /></Field>
         </CardContent>
       </Card>

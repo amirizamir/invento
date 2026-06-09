@@ -38,10 +38,10 @@ import {
   HARDWARE_CATEGORY_LABELS,
   HARDWARE_MANUFACTURER_LABELS,
 } from "@/lib/hardware-validations";
-import { VM_STATUS_LABELS, CRITICALITY_LABELS } from "@/lib/validations";
+import { VM_STATUS_LABELS, CRITICALITY_LABELS, POWER_STATE_LABELS } from "@/lib/validations";
 import { canDeleteHardware, canModifyHardware } from "@/lib/rbac";
 import { toast } from "@/hooks/use-toast";
-import { HardwareCategory, HardwareManufacturer, VMStatus, Criticality } from "@prisma/client";
+import { HardwareCategory, HardwareManufacturer, VMStatus, Criticality, PowerState } from "@prisma/client";
 
 interface HardwareItem {
   id: string;
@@ -52,6 +52,7 @@ interface HardwareItem {
   model: string | null;
   serialNumber: string | null;
   status: VMStatus;
+  powerState: PowerState;
   criticality: Criticality;
   managementIp: string | null;
   hostname: string | null;
@@ -149,6 +150,11 @@ export default function HardwarePage() {
         },
       },
       {
+        accessorKey: "powerState",
+        header: "Power",
+        cell: ({ row }) => POWER_STATE_LABELS[row.original.powerState],
+      },
+      {
         accessorKey: "criticality",
         header: "Criticality",
         cell: ({ row }) => {
@@ -197,6 +203,7 @@ export default function HardwarePage() {
     owner: item.owner,
     department: item.department,
     status: item.status,
+    powerState: item.powerState,
     criticality: item.criticality,
   }));
 

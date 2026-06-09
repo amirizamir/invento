@@ -10,6 +10,7 @@ type HardwareRecord = {
   serialNumber?: string | null;
   partNumber?: string | null;
   status: HardwareInput["status"];
+  powerState: HardwareInput["powerState"];
   criticality: HardwareInput["criticality"];
   environment: HardwareInput["environment"];
   datacenter?: string | null;
@@ -68,6 +69,7 @@ export function toHardwareFormValues(record: HardwareRecord): HardwareInput {
     serialNumber: record.serialNumber ?? undefined,
     partNumber: record.partNumber ?? undefined,
     status: record.status,
+    powerState: record.powerState,
     criticality: record.criticality,
     environment: record.environment,
     datacenter: record.datacenter ?? undefined,
